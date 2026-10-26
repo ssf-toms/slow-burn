@@ -39,3 +39,7 @@ Requirements: macOS (the API key is kept in the Keychain), Python 3, `jq`, Claud
 - **Mid-week, if needed:** `/adjust`. Reshuffle the rest of the week and re-push it.
 
 Runs, PT and walks aren't synced: you report them at the Check-in ([ADR 0002](docs/adr/0002-runs-reported-not-synced.md)).
+
+## License
+
+[MIT](LICENSE)
