@@ -1,4 +1,5 @@
 .env
+.intervals-key
 .scratch/
 .DS_Store
 athlete/
