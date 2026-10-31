@@ -32,6 +32,8 @@ ROOT = Path(__file__).resolve().parent.parent
 API = "https://intervals.icu/api/v1"
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 SESSION_KINDS = {"Recovery", "Quality", "Endurance", "Test", "Strength", "Other"}
+OTHER = "other:"                # Workout cell prefix for the profile's `other` activities
+SMART_TRAINER = "smart-trainer"  # equipment tag
 
 
 class PlanError(Exception):
@@ -65,9 +67,10 @@ def api_key():
         check=True, capture_output=True, text=True).stdout.strip()
 
 
-def call(method, path, body=None, athlete=None, **query):
-    """`path` is under /athlete/<id>; `athlete="0"` means whoever owns the key."""
-    url = f"{API}/athlete/{athlete or ATHLETE}{path}"
+def call(method, path, body=None, athlete_id=None, /, **query):
+    """`path` is under /athlete/<id>; athlete_id "0" means whoever owns the key.
+    The first four are positional-only, so every keyword is a query param."""
+    url = f"{API}/athlete/{athlete_id or ATHLETE}{path}"
     if query:
         url += "?" + "&".join(f"{k}={v}" for k, v in query.items())
     data = json.dumps(body).encode() if body is not None else None
@@ -223,117 +226,135 @@ def ext(week, suffix):
 
 def other_workouts(profile):
     """The profile's `other` activities as note Workouts, keyed `other:<id>`."""
-    return {f"other:{o['id']}": dict(id=f"other:{o['id']}", name=o["name"], sport="other",
-                                     delivery="note", equipment=[],
-                                     prose=f"{o['name']}, {o['minutes']} min.")
+    return {OTHER + o["id"]: dict(id=OTHER + o["id"], name=o["name"], sport="other",
+                                  delivery="note", equipment=[],
+                                  prose=f"{o['name']}, {o['minutes']} min.")
             for o in profile.get("other") or []}
 
 
 def needed_equipment(w):
     # A smart trainer only decides whether a structured ride is indoor or outdoor.
     return [t for t in w.get("equipment") or []
-            if not (t == "smart-trainer" and w["delivery"] == "workout")]
+            if not (t == SMART_TRAINER and w["delivery"] == "workout")]
 
 
-def pairing_problem(session, ws, pairings):
-    if session == "Test" or len(ws) < 2:
+def note_event(name, description, date, external_id):
+    when = f"{date}T00:00:00"
+    return dict(category="NOTE", name=name, description=description,
+                start_date_local=when, end_date_local=when, external_id=external_id)
+
+
+def row_ids(d):
+    return d["workouts"] + ([d["addon"]] if d["addon"] else [])
+
+
+def pairing_problem(session, workouts, pairings):
+    if session == "Test" or len(workouts) < 2:
         return None  # a Test row is the test note plus its spin, not a pairing
     if session == "Quality":
         return "nothing can be paired with a Quality Session"
-    if any(w["sport"] == "other" for w in ws):
+    if any(w["sport"] == "other" for w in workouts):
         return "other activities can't be paired"
-    sports = [w["sport"] for w in ws]
+    sports = [w["sport"] for w in workouts]
     if not any(set(p.split("+")) == set(sports) for p in pairings):
         return (f"{' + '.join(sports)} is not an allowed pairing "
                 f"(profile pairings: {', '.join(pairings) or 'none'})")
     return None
 
 
+def plan_problems(d, bank, level, profile):
+    """What's wrong with one Plan row. `bank` includes the profile's other activities."""
+    equipment = set(profile.get("equipment") or [])
+    problems = []
+    if d["session"] not in SESSION_KINDS:
+        problems.append(f"unknown Session '{d['session']}'")
+    if d["addon"] and d["session"] not in ("Endurance", "Test"):
+        problems.append("Add-on only allowed on Endurance or Test rows")
+    ids = row_ids(d)
+    unknown_other = [w for w in ids if w.startswith(OTHER) and w not in bank]
+    for w in unknown_other:
+        problems.append(f"{w} is not in the profile's other activities")
+    missing = [w for w in ids if w not in bank and w not in unknown_other]
+    if missing:
+        problems.append(f"not in Bank: {', '.join(missing)}")
+    if missing or unknown_other:
+        return problems
+    workouts = [bank[w] for w in d["workouts"]]
+    for w in workouts:
+        if w.get("levels") and level not in w["levels"]:
+            problems.append(f"{w['id']} is for {'/'.join(w['levels'])} weeks only")
+    for w in [bank[i] for i in ids]:
+        lacking = [t for t in needed_equipment(w) if t not in equipment]
+        if lacking:
+            problems.append(f"{w['id']} needs {', '.join(lacking)} (not in the profile's equipment)")
+        if "{easy_run_pace}" in w["prose"] and not profile.get("easy_run_pace"):
+            problems.append(f"{w['id']} needs easy_run_pace in the profile")
+    pairing = pairing_problem(d["session"], workouts, profile.get("pairings") or [])
+    if pairing:
+        problems.append(pairing)
+    if sum(w["delivery"] == "workout" for w in workouts) > 1:
+        problems.append("more than one ride Workout")
+    return problems
+
+
 def build_events(fm, days, bank, profile):
     week, level = fm["week"], fm["level"]
     bank = {**bank, **other_workouts(profile)}
-    have = set(profile.get("equipment") or [])
+    equipment = set(profile.get("equipment") or [])
+    tiered = set(profile.get("tiers") or {})
     pace = profile.get("easy_run_pace")
-    indoor = "smart-trainer" in have
+    indoor = SMART_TRAINER in equipment
     alternatives = profile.get("alternatives") == "on"
 
-    def text(w):
+    def description(w):
         out = w["prose"].replace("{easy_run_pace}", pace or "{easy_run_pace}")
         dose = (w.get("dose") or {}).get(level)
         return out + (f"\n\nToday: {dose}" if dose else "")
+
+    def combined(workouts):
+        return (" + ".join(w["name"] for w in workouts),
+                "\n\n".join(description(w) for w in workouts))
+
+    def offered(alt):
+        return (alternatives and alt is not None and alt["sport"] in tiered
+                and all(t in equipment for t in needed_equipment(alt)))
 
     events, problems = [], []
     for d in days:
         if not d["session"] and not d["workouts"] and not d["addon"]:
             continue  # unplanned day in a partial week
-        if d["session"] not in SESSION_KINDS:
-            problems.append(f"{d['day']}: unknown Session '{d['session']}'")
-        if d["addon"] and d["session"] not in ("Endurance", "Test"):
-            problems.append(f"{d['day']}: Add-on only allowed on Endurance or Test rows")
-        ids = d["workouts"] + ([d["addon"]] if d["addon"] else [])
-        unknown_other = [w for w in ids if w.startswith("other:") and w not in bank]
-        for w in unknown_other:
-            problems.append(f"{d['day']}: {w} is not in the profile's other activities")
-        missing = [w for w in ids if w not in bank and w not in unknown_other]
-        if missing:
-            problems.append(f"{d['day']}: not in Bank: {', '.join(missing)}")
-        if missing or unknown_other:
+        problems += [f"{d['day']}: {p}" for p in plan_problems(d, bank, level, profile)]
+        if any(w not in bank for w in row_ids(d)):
             continue
-        ws = [bank[w] for w in d["workouts"]]
-        for w in ws:
-            if w.get("levels") and level not in w["levels"]:
-                problems.append(f"{d['day']}: {w['id']} is for {'/'.join(w['levels'])} weeks only")
-        for w in [bank[i] for i in ids]:
-            lacking = [t for t in needed_equipment(w) if t not in have]
-            if lacking:
-                problems.append(f"{d['day']}: {w['id']} needs {', '.join(lacking)} "
-                                "(not in the profile's equipment)")
-            if "{easy_run_pace}" in w["prose"] and not pace:
-                problems.append(f"{d['day']}: {w['id']} needs easy_run_pace in the profile")
-        pairing = pairing_problem(d["session"], ws, profile.get("pairings") or [])
-        if pairing:
-            problems.append(f"{d['day']}: {pairing}")
-        rides = [w for w in ws if w["delivery"] == "workout"]
-        if len(rides) > 1:
-            problems.append(f"{d['day']}: more than one ride Workout")
-        when = f"{d['date']}T00:00:00"
-        notes = [w for w in ws if w["delivery"] != "workout"]
+        workouts = [bank[w] for w in d["workouts"]]
+        rides = [w for w in workouts if w["delivery"] == "workout"]
+        notes = [w for w in workouts if w["delivery"] != "workout"]
         if rides and notes:  # e.g. Test row: MyWhoosh test note + pushed spin
-            events.append(dict(category="NOTE", name=" + ".join(w["name"] for w in notes),
-                               description="\n\n".join(text(w) for w in notes),
-                               start_date_local=when, end_date_local=when,
-                               external_id=ext(week, f"{d['day']}-note")))
+            events.append(note_event(*combined(notes), d["date"], ext(week, f"{d['day']}-note")))
         if rides:
-            r = rides[0]
-            desc = text(r)
-            if alternatives and r.get("alternative") in bank:
-                alt = bank[r["alternative"]]
-                desc += f"\n\nAlternative: {alt['name']}. {text(alt)}"
-            desc += "\n\n" + r["workout_text"]
-            events.append(dict(category="WORKOUT", type="Ride", indoor=indoor, name=r["name"],
-                               description=desc, start_date_local=when,
+            ride = rides[0]
+            desc = description(ride)
+            alt = bank.get(ride.get("alternative"))
+            if offered(alt):
+                desc += f"\n\nAlternative: {alt['name']}. {description(alt)}"
+            desc += "\n\n" + ride["workout_text"]
+            events.append(dict(category="WORKOUT", type="Ride", indoor=indoor, name=ride["name"],
+                               description=desc, start_date_local=f"{d['date']}T00:00:00",
                                external_id=ext(week, d["day"])))
-        elif ws:
-            events.append(dict(category="NOTE", name=" + ".join(w["name"] for w in ws),
-                               description="\n\n".join(text(w) for w in ws),
-                               start_date_local=when, end_date_local=when,
-                               external_id=ext(week, d["day"])))
+        elif workouts:
+            events.append(note_event(*combined(workouts), d["date"], ext(week, d["day"])))
         if d["addon"]:
-            a = bank[d["addon"]]
-            events.append(dict(category="NOTE", name=a["name"], description=text(a),
-                               start_date_local=when, end_date_local=when,
-                               external_id=ext(week, f"{d['day']}-addon")))
+            addon = bank[d["addon"]]
+            events.append(note_event(addon["name"], description(addon), d["date"],
+                                     ext(week, f"{d['day']}-addon")))
     sunday = days[-1]["date"]
-    next_week = week_id(sunday + dt.timedelta(days=1))
-    events.append(dict(category="NOTE", name="Check-in: plan next week",
-                       description="Sunday Check-in with Claude: review this week, pick next week's Level.",
-                       start_date_local=f"{sunday}T00:00:00", end_date_local=f"{sunday}T00:00:00",
-                       external_id=ext(week, "checkin")))
     monday = sunday + dt.timedelta(days=1)
-    events.append(dict(category="NOTE", name="Check-in needed",
-                       description="No Week Plan yet for this week. Run the Check-in with Claude.",
-                       start_date_local=f"{monday}T00:00:00", end_date_local=f"{monday}T00:00:00",
-                       external_id=ext(next_week, "checkin-needed")))
+    events.append(note_event("Check-in: plan next week",
+                             "Sunday Check-in with Claude: review this week, pick next week's Level.",
+                             sunday, ext(week, "checkin")))
+    events.append(note_event("Check-in needed",
+                             "No Week Plan yet for this week. Run the Check-in with Claude.",
+                             monday, ext(week_id(monday), "checkin-needed")))
     return events, problems
 
 
@@ -413,7 +434,7 @@ def cmd_fitness(oldest, newest):
 def cmd_whoami():
     if not ATHLETE:
         sys.exit("INTERVALS_ATHLETE_ID isn't set in .env")
-    me = call("GET", "", athlete="0")
+    me = call("GET", "", None, "0")
     print(f"authenticated as {me.get('name') or '?'} ({me['id']})")
     if me["id"] != ATHLETE:
         sys.exit(f"API says your athlete ID is {me['id']}, not {ATHLETE} as in .env")
@@ -444,21 +465,20 @@ def main(argv):
         from_date = args[args.index("--from") + 1]
         args = [a for i, a in enumerate(args) if a != "--from" and (i == 0 or args[i - 1] != "--from")]
     args = [a for a in args if a not in flags]
+    commands = {
+        "push-week": lambda path: cmd_push_week(path, from_date, "--dry-run" in flags),
+        "clear-week": cmd_clear_week,
+        "events": cmd_events,
+        "rides": cmd_rides,
+        "fitness": cmd_fitness,
+        "whoami": cmd_whoami,
+        "test-ride": cmd_test_ride,
+        "delete-event": cmd_delete_event,
+    }
+    if cmd not in commands:
+        sys.exit(__doc__)
     try:
-        if cmd == "push-week":
-            cmd_push_week(args[0], from_date, "--dry-run" in flags)
-        elif cmd == "clear-week":
-            cmd_clear_week(args[0])
-        elif cmd in ("events", "rides", "fitness"):
-            {"events": cmd_events, "rides": cmd_rides, "fitness": cmd_fitness}[cmd](*args[:2])
-        elif cmd == "whoami":
-            cmd_whoami()
-        elif cmd == "test-ride":
-            cmd_test_ride(args[0])
-        elif cmd == "delete-event":
-            cmd_delete_event(args[0])
-        else:
-            sys.exit(__doc__)
+        commands[cmd](*args)
     except ProfileError as e:
         sys.exit(f"Athlete Profile problem: {e}")
     except PlanError as e:

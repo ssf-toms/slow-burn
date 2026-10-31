@@ -277,6 +277,21 @@ class PushedEvents(unittest.TestCase):
         e = event(self.events(off, {"Wed": ("Endurance", "end-ride-60")}), "Wed")
         self.assertNotIn("Alternative:", e["description"])
 
+    def test_no_alternative_line_when_its_sport_is_not_tiered(self):
+        no_run = INDOOR_PROFILE.replace("  run: secondary\n", "").replace('easy_run_pace: "5:45–6:00/km"\n', "")
+        e = event(self.events(no_run, {"Wed": ("Endurance", "end-ride-60")}), "Wed")
+        self.assertNotIn("Alternative:", e["description"])
+
+    def test_no_alternative_line_when_its_equipment_is_missing(self):
+        bank = icu.load_bank()
+        bank["run-easy-8-10"] = {**bank["run-easy-8-10"], "equipment": ["pool"]}
+        e = event(self.events(INDOOR_PROFILE, {"Wed": ("Endurance", "end-ride-60")}, bank=bank), "Wed")
+        self.assertNotIn("Alternative:", e["description"])
+
+    def test_alternative_line_when_its_sport_is_tiered_and_equipment_fits(self):
+        e = event(self.events(INDOOR_PROFILE, {"Wed": ("Endurance", "end-ride-60")}), "Wed")
+        self.assertIn("Alternative: Easy run 8–10 km", e["description"])
+
 
 class SetupCommands(unittest.TestCase):
     def run_cmd(self, argv, reply=None):
@@ -289,7 +304,7 @@ class SetupCommands(unittest.TestCase):
 
     def test_whoami_prints_name_and_id(self):
         out, call = self.run_cmd(["whoami"], {"id": "i123456", "name": "Sam Rider"})
-        call.assert_called_once_with("GET", "", athlete="0")
+        call.assert_called_once_with("GET", "", None, "0")  # "0": whoever owns the key
         self.assertEqual(out, "authenticated as Sam Rider (i123456)\n")
 
     def test_whoami_fails_when_the_id_differs_from_env(self):

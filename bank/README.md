@@ -20,7 +20,7 @@ Ride targets are **%FTP** with simple steps and repeats, and no ramps or cadence
 | `kind` | `quality` \| `endurance` \| `strength` \| `add-on` \| `pt` \| `recovery` \| `test` | What the Workout is for. |
 | `sport` | `ride` \| `run` \| `walk` \| `strength` \| `pt` | The activity. |
 | `duration_min` | number | Typical length in minutes. |
-| `equipment` | list of tags, `[]` for none | The Equipment the Workout needs, from the tags in `docs/athlete-profile.md` (`bodyweight`, `bands`, `kettlebell`, `dumbbells`, `barbell`, `gym`, `smart-trainer`, `pool`, `hr-strap`). It can only be planned if the athlete has every tag. Required in every file. |
+| `equipment` | list of tags, `[]` for none | The Equipment the Workout needs, from the tags in `docs/athlete-profile.md` (`bodyweight`, `bands`, `kettlebell`, `dumbbells`, `barbell`, `gym`, `smart-trainer`, `pool`, `hr-strap`). It can only be planned if the athlete has every tag. The one exception: `smart-trainer` on a `delivery: workout` ride only decides whether it's pushed as indoor or outdoor, so the ride can be planned without one. Required in every file. |
 | `delivery` | `workout` \| `note` | `workout` is pushed as a structured workout (rides). `note` is a calendar note. |
 | `ladder`, `step` | Ladder name, number | Quality Workouts only: which Ladder, and which step on it. |
 | `variant_group` | string | Workouts that rotate with each other (Endurance rides, runs, Strength, Add-ons). |

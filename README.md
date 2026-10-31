@@ -1,11 +1,11 @@
 # Slow Burn
 
-A weekly training planner for aerobic fitness and durability, not racing. It plans your mix of cycling (indoors or out), running, strength and physical therapy around the kit you have. Each week you have a short conversation with [Claude Code](https://claude.com/claude-code): it reviews the week just gone, agrees the next one with you, and pushes it to [intervals.icu](https://intervals.icu). From there, rides can sync to a trainer app such as MyWhoosh, and every Session shows up in your calendar.
+A weekly training planner for aerobic fitness and durability, not racing. It plans your mix of cycling (indoors or out), running, strength and physical therapy around the Equipment you have. Each week you have a short conversation with [Claude Code](https://claude.com/claude-code): it reviews the week just gone, agrees the next one with you, and pushes it to [intervals.icu](https://intervals.icu). From there, rides can sync to a trainer app such as MyWhoosh, and every Session shows up in your calendar.
 
 ## The idea
 
 - **Start from you.** A one-time **Setup** builds your **Athlete Profile**: a **Sport Tier** for each activity (Primary, Secondary, Occasional), the **Equipment** you have, your experience and the days you can train. It generates your **Week Templates** from that, and only plans Workouts your Equipment allows. Where the Bank has nothing to fill a slot (there are no swim Workouts yet, and Ladders exist only for rides), Setup tells you instead of inventing one.
-- **Plan the week before it starts.** A Sunday **Check-in** reviews the week and picks a **Week Level**: Light, Normal or Push. Levels change how many cardio days the week has, not how long the Sessions are.
+- **Plan the week before it starts.** A Sunday **Check-in** reviews the week and picks a **Week Level**: Light, Normal or Push. A Level picks how many of your available days are training days, and the Dose of each Workout (rounds for strength and PT, minutes for an Endurance ride).
 - **Climb slowly.** Quality rides sit on **Ladders** (Sweet Spot, Threshold, VO2max). You move up a step only after finishing the current one at an effort of 7/10 or below.
 - **Back off before you need to.** **Load Warnings** suggest a Light week after a run of hard weeks, or when fitness and fatigue numbers look stretched. They're advice only: you decide.
 - **Real life wins.** An **Adjustment** reshuffles the rest of the week when you're ill, short of time or travelling, or the weather is good, without breaking the spacing rules.

@@ -46,10 +46,10 @@ The client is `scripts/icu.py`. Run it from the repo root.
 ## 3. Shape the coming week
 
 1. Ask about the week ahead: busy or fixed days, travel, energy and motivation.
-2. Evaluate the Load Warning rules. Rules 1 and 2 always apply. Rules 3 and 4 apply only if ride is tiered; otherwise report them as "n/a: no riding" and weigh the reported Sessions by judgement.
+2. Evaluate the Load Warning rules. Rules 1 and 2 always apply. Rules 3 and 4 apply only if ride is Primary or Secondary (not Occasional); otherwise report them as "n/a: ride not Primary or Secondary" and weigh the reported Sessions by judgement.
 3. Ask the user to choose Light, Normal or Push. Recommend Light if any rule triggered. Otherwise recommend from their answers.
 
-**Done when** the Level is chosen and every Load Warning rule has been reported as triggered, clear, not enough data yet, or n/a: no riding.
+**Done when** the Level is chosen and every Load Warning rule has been reported as triggered, clear, not enough data yet, or n/a: ride not Primary or Secondary.
 
 ## 4. Build the Week Plan
 

@@ -11,12 +11,16 @@ The lasting description of the person being planned for: their Sport Tiers, Equi
 _Avoid_: Settings, config, user
 
 **Sport Tier**:
-How much an activity counts in the Athlete Profile. Every activity has a Tier, including strength and PT, so a profile can be just PT and home strength. **Primary** activities get the most Sessions, and a Quality slot each where they have Ladders. **Secondary** activities get steady, easy volume. **Occasional** activities appear as an Alternative or a single Session. More than one activity can be Primary.
+How much an activity counts in the Athlete Profile. Every activity has a Tier, including strength and PT, so a profile can be just PT and home strength. **Primary** activities get the most Sessions, and a Quality slot each where they have Ladders. **Secondary** activities get one or two steady, easy Sessions a week. **Occasional** activities appear as an Alternative or a single Session. More than one activity can be Primary.
 _Avoid_: Weight, priority, percentage
 
+**Tiered**:
+Said of an activity that has a Sport Tier in the Athlete Profile, at any Tier, Occasional included. An activity that isn't tiered is never planned. "Ride is tiered" and "ride is Primary" are different conditions.
+_Avoid_: Enabled, active, selected
+
 **Equipment**:
-The kit the athlete has access to, as a flat list (for example bodyweight, bands, kettlebell, dumbbells, gym, smart trainer, pool). A Workout can be planned only if the athlete has all the Equipment it needs.
-_Avoid_: Gear, kit, setup
+What the athlete has access to for training, as a flat list (for example bodyweight, bands, kettlebell, dumbbells, gym, smart trainer, pool). A Workout can be planned only if the athlete has all the Equipment it needs, except that a structured ride doesn't need the smart trainer: it only decides whether the ride is indoor or outdoor.
+_Avoid_: Gear, kit
 
 **Setup**:
 The one-time conversation that builds the Athlete Profile, approves the Week Templates, and connects intervals.icu. It can be run again to change the profile.
@@ -36,6 +40,10 @@ _Avoid_: Volume, size, amount
 The small curated set of Workouts that every Week Plan draws from.
 _Avoid_: Library, catalogue, database
 
+**Bank gap**:
+A slot an athlete's Week Templates call for that the Workout Bank can't fill for them: a tiered sport with no Workouts, or Workouts that all need Equipment the athlete lacks. Setup lists gaps in the Athlete Profile's Notes, and they're never filled with an invented Workout. Called a gap for short.
+_Avoid_: Missing workout, hole, TODO
+
 **Ladder**:
 An ordered sequence of Workouts of one Quality type in one sport, each slightly harder than the last. You move up a step after completing the current one at an effort of 7/10 or below.
 _Avoid_: Progression, plan, series
@@ -45,6 +53,10 @@ _Avoid_: Progression, plan, series
 **Session**:
 The main planned activity for a day. A day has exactly one Session, optionally followed by a Strength Add-on. A Session can combine Workouts (such as PT then strength) only if the athlete chose that pairing in their Athlete Profile.
 _Avoid_: Workout (when meaning the scheduled thing), activity, training
+
+**Pairing**:
+Two Workouts the athlete has chosen to combine in one Session (such as PT then strength), listed in the Athlete Profile. Nothing is paired with a Quality Session, and Other activities are never paired.
+_Avoid_: Combo, superset, double
 
 **Quality Session**:
 A ride or run with deliberate time above endurance intensity (tempo, sweet spot, threshold, VO2max).
@@ -74,8 +86,12 @@ _Avoid_: Test day, benchmark
 The ~30 min physical-therapy routine, done for maintenance.
 _Avoid_: Mobility, rehab, stretching
 
+**Other**:
+A free-form activity the athlete does regularly outside the Workout Bank (a Pilates class, say), listed in the Athlete Profile's `other` and written `other:<id>` in a Week Plan. It counts either as training, as an `Other` Session on a training day, or as recovery, filling a Recovery Day. It's pushed as a calendar note, never Quality and never paired.
+_Avoid_: Custom workout, misc, extra
+
 **Recovery Day**:
-A day whose Session is a PT Session, a walk, or full rest. Every other day is a training day.
+A day whose Session is a PT Session, a walk, a recovery-type Other activity, or full rest. Every other day is a training day.
 _Avoid_: Rest day, off day
 
 ### Planning
