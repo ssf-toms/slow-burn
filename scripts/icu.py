@@ -16,8 +16,9 @@ Week Record format: docs/week-records.md. Workout Bank: bank/README.md, plus the
 athlete's Personal Workouts and Exercises in athlete/bank/ (or $ATHLETE_DIR/bank/).
 push-week checks the plan against the Athlete Profile (docs/athlete-profile.md),
 read from athlete/profile.md, or $ATHLETE_DIR/profile.md when that is set.
-Credentials: INTERVALS_ATHLETE_ID and INTERVALS_KEYCHAIN_SERVICE in .env, API
-key in the macOS Keychain. The /setup skill sets all three up.
+Credentials: INTERVALS_ATHLETE_ID in .env; the API key in .intervals-key at the repo
+root (gitignored), or INTERVALS_API_KEY in the environment, which wins. The key is
+never read from .env. The /setup skill sets both up.
 """
 import base64
 import datetime as dt
@@ -25,7 +26,6 @@ import inspect
 import json
 import os
 import re
-import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -75,7 +75,7 @@ def load_env():
     env, path = {}, ROOT / ".env"
     if not path.exists():  # dry runs and tests need no credentials
         return env
-    for line in path.read_text().splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         if "=" in line and not line.lstrip().startswith("#"):
             k, v = line.split("=", 1)
             env[k.strip()] = v.strip().strip("'\"")
@@ -87,10 +87,16 @@ ATHLETE = ENV.get("INTERVALS_ATHLETE_ID")
 
 
 def api_key():
-    return subprocess.run(
-        ["security", "find-generic-password", "-a", subprocess.getoutput("id -un"),
-         "-s", ENV["INTERVALS_KEYCHAIN_SERVICE"], "-w"],
-        check=True, capture_output=True, text=True).stdout.strip()
+    """INTERVALS_API_KEY from the environment (never .env), else .intervals-key."""
+    key = os.environ.get("INTERVALS_API_KEY")
+    if key:
+        return key
+    path = ROOT / ".intervals-key"
+    key = path.read_text(encoding="utf-8").strip() if path.exists() else ""
+    if key:
+        return key
+    sys.exit("No intervals.icu API key. Paste it into .intervals-key at the repo root "
+             "(see /setup step 5), or set INTERVALS_API_KEY.")
 
 
 def call(method, path, body=None, athlete_id=None, /, **query):
@@ -110,6 +116,8 @@ def call(method, path, body=None, athlete_id=None, /, **query):
         with urllib.request.urlopen(req) as r:
             raw = r.read()
     except urllib.error.HTTPError as e:
+        if e.code == 401:
+            sys.exit("intervals.icu rejected the API key: check .intervals-key")
         sys.exit(f"{method} {path} failed: HTTP {e.code} {e.read().decode()[:300]}")
     return json.loads(raw) if raw else None
 
@@ -194,7 +202,7 @@ def load_profile():
     path = athlete_dir() / "profile.md"
     if not path.exists():
         raise ProfileError(f"no Athlete Profile at {path}: run /setup")
-    return split_frontmatter(path.read_text())[0]
+    return split_frontmatter(path.read_text(encoding="utf-8"))[0]
 
 
 def places(profile):
@@ -283,7 +291,7 @@ def load_bank(bank_dir=None, personal_dir=None):
     for origin, p in bank_files(bank_dir, personal_dir):
         here = f"{origin_label(origin)} {p}"
         try:
-            fm, body = split_frontmatter(p.read_text())
+            fm, body = split_frontmatter(p.read_text(encoding="utf-8"))
         except PlanError as e:
             problems.append(f"{here}: {e}")
             continue
@@ -316,7 +324,7 @@ def load_bank(bank_dir=None, personal_dir=None):
 
 
 def parse_week(path):
-    fm, body = split_frontmatter(Path(path).read_text())
+    fm, body = split_frontmatter(Path(path).read_text(encoding="utf-8"))
     start = dt.date.fromisoformat(fm["start"])
     if start.weekday() != 0:
         raise PlanError(f"start {start} is not a Monday")
@@ -775,4 +783,6 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    for stream in (sys.stdout, sys.stderr):  # a Windows pipe defaults to cp1252: ′ → × break it
+        stream.reconfigure(encoding="utf-8")
     main(sys.argv)
