@@ -37,6 +37,7 @@ OTHER = "other:"                # Workout cell prefix for the profile's `other` 
 SMART_TRAINER = "smart-trainer"  # equipment tag
 EXTENSION_MIN = (10, 15)         # allowed Extension minutes, Push Quality rides only
 EXTENSION_PCT = 68               # Endurance (Zone 2) %FTP for Extension minutes
+PACES = ("easy_run_pace", "threshold_run_pace")  # profile fields run Workouts write as {field}
 
 
 class PlanError(Exception):
@@ -297,8 +298,9 @@ def plan_problems(d, bank, level, profile):
         lacking = [t for t in needed_equipment(w) if t not in equipment]
         if lacking:
             problems.append(f"{w['id']} needs {', '.join(lacking)} (not in the profile's equipment)")
-        if "{easy_run_pace}" in w["prose"] and not profile.get("easy_run_pace"):
-            problems.append(f"{w['id']} needs easy_run_pace in the profile")
+        for pace in PACES:
+            if "{" + pace + "}" in w["prose"] and not profile.get(pace):
+                problems.append(f"{w['id']} needs {pace} in the profile")
     pairing = pairing_problem(d["session"], workouts, profile.get("pairings") or [])
     if pairing:
         problems.append(pairing)
@@ -335,22 +337,27 @@ def build_events(fm, days, bank, profile):
     bank = {**bank, **other_workouts(profile)}
     equipment = set(profile.get("equipment") or [])
     tiered = set(profile.get("tiers") or {})
-    pace = profile.get("easy_run_pace")
     indoor = SMART_TRAINER in equipment
     alternatives = profile.get("alternatives") == "on"
 
     def description(w):
-        out = w["prose"].replace("{easy_run_pace}", pace or "{easy_run_pace}")
+        out = w["prose"]
+        for pace in PACES:
+            out = out.replace("{" + pace + "}", profile.get(pace) or "{" + pace + "}")
         dose = (w.get("dose") or {}).get(level)
         return out + (f"\n\nToday: {dose}" if dose else "")
-
-    def combined(workouts):
-        return (" + ".join(w["name"] for w in workouts),
-                "\n\n".join(description(w) for w in workouts))
 
     def offered(alt):
         return (alternatives and alt is not None and alt["sport"] in tiered
                 and all(t in equipment for t in needed_equipment(alt)))
+
+    def alternative_line(w):
+        alt = bank.get(w.get("alternative"))
+        return f"\n\nAlternative: {alt['name']}. {description(alt)}" if offered(alt) else ""
+
+    def combined(workouts):
+        return (" + ".join(w["name"] for w in workouts),
+                "\n\n".join(description(w) + alternative_line(w) for w in workouts))
 
     events, problems = [], []
     if sum(1 for d in days if d.get("extend")) > 1:
@@ -375,9 +382,7 @@ def build_events(fm, days, bank, profile):
                 name += f" +{minutes}′"
                 text = extended(text, minutes)
                 desc += f"\n\nToday: +{minutes} min at Endurance ({EXTENSION_PCT}%) before the cooldown."
-            alt = bank.get(ride.get("alternative"))
-            if offered(alt):
-                desc += f"\n\nAlternative: {alt['name']}. {description(alt)}"
+            desc += alternative_line(ride)
             desc += "\n\n" + text
             events.append(dict(category="WORKOUT", type="Ride", indoor=indoor, name=name,
                                description=desc, start_date_local=f"{d['date']}T00:00:00",

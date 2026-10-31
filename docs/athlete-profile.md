@@ -21,6 +21,7 @@ availability:
   fixed:
     Mon: rest
 easy_run_pace: "5:20–5:40/km"
+threshold_run_pace: "4:50/km"
 alternatives: on
 ftp: 230
 lthr: 168
@@ -61,10 +62,11 @@ Setup asks the questions in this order. "Asked" says when Setup asks for a field
 | `tiers` | map of activity → `primary` \| `secondary` \| `occasional` | Always | The activities are `ride`, `run`, `swim`, `walk`, `strength` and `pt`. Leave an activity out if it isn't planned at all. At least one activity is needed. |
 | `other` | list of `{id, name, minutes, counts_as}` | Always: "anything else you do regularly?" Write `[]` for none | Free-form activities, delivered as calendar notes. `counts_as` is `training` (an `Other` Session) or `recovery` (it can fill a Recovery Day). Never Quality, never paired, and no Equipment. The `id` is lowercase with dashes. In the Week Record it's written `other:<id>`. |
 | `equipment` | list of tags | Always | Pick from `bodyweight`, `bands`, `kettlebell`, `dumbbells`, `barbell`, `gym`, `smart-trainer`, `pool` and `hr-strap`. A Workout can only be planned if every tag it needs is here, with one exception: on a ride pushed as a structured workout (`delivery: workout`), `smart-trainer` only decides whether it's pushed as indoor or outdoor, so the ride can be planned without one. The FTP test is a note, so it still needs a smart trainer. |
-| `experience` | `new` \| `some` \| `experienced` | Only if a Primary activity has Ladders (today, only `ride`) | Sets the starting Ladder step: 1, 2 or 3, for each Primary sport that has Ladders. |
+| `experience` | `new` \| `some` \| `experienced` | Only if ride or run is Primary (the sports with Ladders) | Sets the starting Ladder step: 1, 2 or 3, for each Primary sport that has Ladders. |
 | `availability.days_per_week` | number, 3–6 | Always | The number of training days in a Push week. Normal has one fewer, Light two fewer. The rest are Recovery Days, so at most 6 (Push keeps one) and at least 3 (Light keeps one training day). |
 | `availability.fixed` | map of day → value | Always: "any day that's always the same?" Write `{}` for none | Days placed first when generating. The value is `rest` (a Recovery Day with no Workout), `recovery` (any Recovery Day), a tiered activity (`strength`, `swim`, …) or `other:<id>`. The spec's "Tue: gym" is written `Tue: strength`, with `gym` in `equipment`. |
 | `easy_run_pace` | string, e.g. `"5:45–6:00/km"` | Only if `run` is tiered | Put into run Workouts in place of `{easy_run_pace}` when they're pushed. |
+| `threshold_run_pace` | string, e.g. `"4:50/km"` | Only if `run` is Primary | The pace you could race for about an hour. Run Quality Workouts write their targets as `{threshold_run_pace}` plus an offset ("+15–20 s/km"), filled in when they're pushed. Updated after each run test (`run-test-20`). If unknown, the first run Quality slot is the run test. |
 | `pairings` | list, e.g. `[pt+strength]` | Only if two or more of `pt`, `strength` and `walk` are tiered. Write `[]` if asked and there are none | Workouts that may share one Session, joined by `+`. Nothing is ever paired with a Quality Session, and `other` activities are never paired. |
 | `alternatives` | `on` \| `off` | Only if two or more of `ride`, `run` and `swim` are tiered. Left out means `off` | Whether every Endurance Session names an Alternative in another sport. |
 | `ftp` | number (watts) | Only if `ride` is tiered | Moved out of `.env`. Updated after each FTP test. |

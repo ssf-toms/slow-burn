@@ -2,6 +2,7 @@
 import contextlib
 import io
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -79,9 +80,9 @@ class BankFrontmatter(unittest.TestCase):
         self.assertEqual(self.bank["run-easy-6-8"]["equipment"], [])
         self.assertEqual(self.bank["pt"]["equipment"], [])
 
-    def test_endurance_rides_name_an_alternative_in_the_bank(self):
+    def test_endurance_rides_and_runs_name_an_alternative_in_the_bank(self):
         for wid, w in self.bank.items():
-            if w["kind"] == "endurance" and w["sport"] == "ride":
+            if w["kind"] == "endurance" and w["sport"] in ("ride", "run"):
                 with self.subTest(workout=wid):
                     self.assertNotIn("run_alternative", w)
                     self.assertIn(w.get("alternative"), self.bank)
@@ -178,6 +179,19 @@ class ExampleProfileWeeks(unittest.TestCase):
         athlete_dir(self, example_profile("profile-home.md"))
         self.assertIn("dry run: 8 to upsert", dry_run(EXAMPLES / "profile-home-2026-W45.md"))
 
+    def test_triathlete_normal_week_with_a_run_ladder_step_and_run_alternative(self):
+        athlete_dir(self, example_profile("profile.md"))
+        path = week(self, {"Mon": ("Recovery", ""), "Tue": ("Quality", "th-2"),
+                           "Wed": ("Endurance", "end-ride-60"), "Thu": ("Quality", "run-th-2"),
+                           "Fri": ("Recovery", ""), "Sun": ("Endurance", "run-easy-8-10")})
+        self.assertIn("dry run: 6 to upsert", dry_run(path))
+
+    def test_run_test_day_passes_for_the_triathlete(self):
+        athlete_dir(self, example_profile("profile.md"))
+        events, problems = build(week(self, {"Thu": ("Test", "run-test-20")}))
+        self.assertEqual(problems, [])
+        self.assertIn("4:50/km", event(events, "Thu")["description"])
+
     def test_dumbbell_only_athlete_cannot_do_str_a(self):
         athlete_dir(self, example_profile("profile-home.md"))
         path = week(self, {"Mon": ("Strength", "pt, str-a")})
@@ -240,6 +254,11 @@ class ProfileChecks(unittest.TestCase):
         self.assertIn("Wed: run-easy-6-8 needs easy_run_pace in the profile", problems)
 
 
+    def test_run_quality_needs_a_threshold_pace_in_the_profile(self):
+        no_threshold = re.sub(r"threshold_run_pace: .*\n", "", example_profile())
+        problems = self.problems(no_threshold, {"Tue": ("Quality", "run-tempo-1")})
+        self.assertIn("Tue: run-tempo-1 needs threshold_run_pace in the profile", problems)
+
 class PushedEvents(unittest.TestCase):
     def events(self, profile, rows, level="normal", bank=None):
         athlete_dir(self, profile)
@@ -255,6 +274,12 @@ class PushedEvents(unittest.TestCase):
     def test_run_pace_comes_from_the_profile(self):
         e = event(self.events(example_profile(), {"Wed": ("Endurance", "run-easy-6-8")}), "Wed")
         self.assertIn("Easy pace (5:20–5:40/km)", e["description"])
+
+    def test_run_quality_note_gets_threshold_pace_from_the_profile(self):
+        e = event(self.events(example_profile(), {"Tue": ("Quality", "run-th-2")}), "Tue")
+        self.assertEqual(e["category"], "NOTE")
+        self.assertIn("4:50/km", e["description"])
+        self.assertNotIn("{threshold_run_pace}", e["description"])
 
     def test_dose_for_the_week_level_is_appended(self):
         bank = icu.load_bank()
@@ -292,6 +317,17 @@ class PushedEvents(unittest.TestCase):
         e = event(self.events(INDOOR_PROFILE, {"Wed": ("Endurance", "end-ride-60")}), "Wed")
         self.assertIn("Alternative: Easy run 8–10 km", e["description"])
 
+
+    def test_run_note_offers_its_ride_alternative(self):
+        e = event(self.events(example_profile(), {"Wed": ("Endurance", "run-easy-8-10")}), "Wed")
+        self.assertEqual(e["category"], "NOTE")
+        self.assertIn("Alternative: Endurance 60.", e["description"])
+        self.assertNotIn("swap this for", e["description"])
+
+    def test_run_alternative_line_only_when_alternatives_are_on(self):
+        off = example_profile().replace("alternatives: on\n", "")
+        e = event(self.events(off, {"Wed": ("Endurance", "run-easy-8-10")}), "Wed")
+        self.assertNotIn("Alternative:", e["description"])
 
 class Extensions(unittest.TestCase):
     def setUp(self):
