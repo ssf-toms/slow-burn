@@ -30,7 +30,7 @@ The same rules hold for every template:
 
 ### Worked example
 
-The maintainer's profile: ride and mobility Primary, strength Secondary, run and walk Occasional, `days_per_week: 6`, `fixed: {Mon: strength}`, `pairings: [mobility+strength]`, `alternatives: on`, and a smart trainer.
+The maintainer's profile: ride and mobility Primary, strength Secondary, run and walk Occasional, `days_per_week: 6`, `fixed: {}`, `pairings: [mobility+strength]`, `alternatives: on`, and a smart trainer.
 
 | Day | Light | Normal | Push |
 |-----|-------|--------|------|
@@ -38,15 +38,15 @@ The maintainer's profile: ride and mobility Primary, strength Secondary, run and
 | Tue | Quality: ride | Quality: ride | Quality: ride |
 | Wed | Endurance: ride (alt: run) + Add-on | Endurance: ride (alt: run) + Add-on | Endurance: ride (alt: run) + Add-on |
 | Thu | Recovery: mobility | Quality: ride | Quality: ride |
-| Fri | Recovery: walk | Recovery: mobility | Endurance: ride (alt: run) |
+| Fri | Recovery: mobility or walk | Recovery: mobility | Endurance: ride (alt: run) |
 | Sat | Endurance: ride (alt: run) | Endurance: ride (alt: run) | Endurance: ride (alt: run) |
 | Sun | Recovery: mobility | Recovery: mobility or walk | Recovery: mobility or walk |
 
 How the rules were applied:
-- **Fixed days:** Monday's mobility and strength is placed first. It's a Strength Session, so Monday is now a training day, where the old fixed tables called it a Recovery Day.
-- **Training days:** 4 (Light), 5 (Normal) and 6 (Push), so Push keeps Sunday as a Recovery Day. Compared with the old tables, Monday's new training day costs one Endurance Session at each Level (Light's Tuesday and Friday, Normal's Sunday, Push's Sunday).
-- **Quality:** ride is the only Primary sport with Ladders, so it gets both slots, Tuesday and Thursday as before. Light keeps one, on Tuesday (an easy Sweet Spot, see rule 1 in `bank/README.md`).
-- **Tiers:** ride is on at least 2 days at every Level. Mobility is on Monday and at least one Recovery Day. Strength is Monday plus Wednesday's Add-on. Run is an Alternative only, and the walk is on at most one day.
+- **Fixed days:** none. Monday's mobility then strength is the athlete's choice at Setup, not a fixed day, so it can move at an Adjustment. It's a Strength Session, so Monday is a training day.
+- **Training days:** 4 (Light), 5 (Normal) and 6 (Push), so Push keeps Sunday as a Recovery Day.
+- **Quality:** ride is the only Primary sport with Ladders, so it gets both slots, Tuesday and Thursday. Light keeps one, on Tuesday (an easy Sweet Spot, see rule 1 in `bank/README.md`).
+- **Tiers:** ride is on at least 2 days at every Level. Mobility is on Monday and at least one Recovery Day. Strength is Monday plus Wednesday's Add-on. Run is an Alternative only, and the walk can replace mobility on at most one Recovery Day a week.
 - **Dose:** Light rides are 50–60′, Normal 60–75′ with Saturday as its one 75′ ride, and Push 60–75′ with at least Saturday at 75′.
 
 ## Load Warnings

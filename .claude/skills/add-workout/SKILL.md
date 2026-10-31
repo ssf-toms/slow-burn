@@ -42,7 +42,7 @@ The Workout Bank is the Core Bank (`bank/`) plus the athlete's Personal files (`
 
 ## 4. Save and validate
 
-1. Write each approved file: Exercises to `athlete/bank/exercises/<id>.md`, Workouts to `athlete/bank/workouts/<id>.md`.
+1. Write each approved file: Exercises to `athlete/bank/exercises/<id>.md`, Workouts to `athlete/bank/workouts/<id>.md`. The folder is what makes a file an Exercise: `icu.py` reads every file in `exercises/` as an Exercise and every other file as a Workout, so an Exercise saved anywhere else fails `check-bank` with "Exercises go in exercises/".
 2. Run `./scripts/icu.py check-bank`. It names the file and the problem for any failure. Fix the file and run it again until it prints `Workout Bank OK` listing the new IDs.
 3. If it closes a gap in the profile's Notes, update that line in `athlete/profile.md` to name the Personal file.
 4. Commit in the athlete repo (`git -C athlete`) as "Add Personal <Exercise|Workout>: <id>".

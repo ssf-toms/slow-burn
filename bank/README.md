@@ -26,7 +26,7 @@ Ride targets are **%FTP** with simple steps and repeats, and no ramps or cadence
 | `variant_group` | string | Workouts that rotate with each other (Endurance rides, runs). |
 | `levels` | list, e.g. `[push]` | Optional. The Week Levels it may be planned in. Left out means any. |
 | `alternative` | Workout `id`, or a list of them | Optional. The Alternative of similar effort, in another sport, offered next to this Endurance Workout. A list is in order of preference: `push-week` offers the first one in a tiered sport whose Equipment the profile has. The body ends with a matching `Alternative: swap this for …` line, which is not pushed. |
-| `dose` | `{light: "...", normal: "...", push: "..."}` | Optional. The Workout's Dose at each Week Level. Not set on any Workout yet. Composed strength takes its rounds from picking rule 6 instead. |
+| `dose` | `{light: "...", normal: "...", push: "..."}` | Optional. The Workout's Dose at each Week Level. Not set on any Workout yet. Composed strength takes its rounds from the Level (picking rule 6), and composed mobility is 2 rounds at every Level (picking rule 9). |
 
 Run Workouts write their pace as `{easy_run_pace}` or `{threshold_run_pace}`, filled from the Athlete Profile when they're pushed. Run Quality targets are threshold pace plus an offset, with an RPE alongside for hills, wind and bad days:
 
@@ -39,6 +39,8 @@ Run Workouts write their pace as `{easy_run_pace}` or `{threshold_run_pace}`, fi
 ## Exercises
 
 A single strength or mobility movement (ADR 0004). Strength Sessions and Strength Add-ons have no Workout of their own: each Check-in composes them from Exercises, and the Week Plan lists the Exercise IDs. Mobility Sessions are composed from `mobility` Exercises too, or use a whole `kind: mobility` Workout (picking rule 9). Exercise IDs share one namespace with Workout IDs, so no two files may use the same `id`.
+
+An Exercise is recognised by its folder alone: every file in an `exercises/` folder (`bank/exercises/`, `athlete/bank/exercises/`) is an Exercise, and every file elsewhere is a Workout. A file outside `exercises/` that has a `pattern` fails the mechanical checks with "Exercises go in exercises/".
 
 | Field | Value | Meaning |
 |-------|-------|---------|
@@ -231,7 +233,7 @@ The Core `pt` Workout (`kind: pt`, `sport: pt`) is retired too, with the `pt` ti
    If `alternatives: on`, every Endurance Session names an Alternative of similar effort in another tiered sport, which you can swap in on the day. `push-week` offers the first Alternative on the Workout's list that the profile can use. Where the Week Template names one (`ride (alt: swim)`), pick a Workout whose first usable Alternative is that sport: the 50′ rides offer a swim first, the other rides and the runs offer a run or ride first and a swim after it.
 5. **Endurance variety:** never the same Workout twice in one week. Prefer a different Workout from the one on the same day last week.
 6. **Strength:** only if strength is tiered. Compose each Strength Session and Add-on from the Exercises whose Equipment the day's Place has:
-   - **Size:** a Strength Session has 5–6 Exercises, an Add-on 2–3. (`push-week` accepts 3–8 and 2–4.) No Exercise twice in one row.
+   - **Size:** aim for 5–6 Exercises in a Strength Session and 2–3 in an Add-on. `push-week` only rejects clear mistakes: a Session outside 3–8 or an Add-on outside 2–4. No Exercise twice in one row.
    - **Balance:** all the strength in the week, Sessions and Add-ons together, covers squat, hinge, push, pull, carry and core. A lone Strength Session in a week is full-body, covering all six itself. A week whose only strength is an Add-on or two (strength Occasional, say) can't hold all six: cover them over two or three weeks, starting with the patterns last week's Add-ons missed.
    - **Variety:** prefer Exercises not used last week (read last week's Plan rows), and vary between Sessions in the same week.
    - **Dose:** rounds by Level, Light 2, Normal 3, Push 4. `push-week` writes the rounds into the note, so the Plan row lists only the Exercise IDs, in order.
@@ -245,4 +247,8 @@ The Core `pt` Workout (`kind: pt`, `sport: pt`) is retired too, with the `pt` ti
    - 6–8 composed `mobility` Exercises whose Equipment the day's Place has;
    - a whole `kind: mobility` Workout followed by 2–3 mobility Exercises.
 
-   It's one activity, so the last isn't a Pairing. Composed mobility is 2 rounds at every Level, moving slowly between the holds; `push-week` pushes it as one note, "Mobility (2 rounds)". Vary the mix across the week, following any preference in the profile's Notes ("PT most days, Bank mobility now and then"): nothing in the profile locks a routine in. Prefer mobility Exercises not used last week, and cover hips, thoracic spine, ankles, hamstrings and shoulders across the week. With `mobility+strength` in `pairings`, a Mobility Session may come before a Strength Session in one row: a mobility block and a strength block are separate notes even when their Exercise IDs are adjacent.
+   It's one activity, so the last isn't a Pairing.
+
+   **Dose:** composed mobility is 2 rounds at every Level, Light, Normal and Push alike: mobility Exercises are held for time or done as slow reps, for maintenance, so the Level changes the strength rounds and the training days, never the mobility. `push-week` pushes a composed block as one note, "Mobility (2 rounds)", moving slowly between the holds.
+
+   Vary the mix across the week, following any preference in the profile's Notes ("PT most days, Bank mobility now and then"): nothing in the profile locks a routine in. Prefer mobility Exercises not used last week, and cover hips, thoracic spine, ankles, hamstrings and shoulders across the week. With `mobility+strength` in `pairings`, a Mobility Session may come before a Strength Session in one row: a mobility block and a strength block are separate notes even when their Exercise IDs are adjacent.

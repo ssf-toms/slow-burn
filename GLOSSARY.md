@@ -49,7 +49,7 @@ A single strength or mobility movement (a goblet squat, a band row, a hip flexor
 _Avoid_: Move, drill, lift
 
 **Workout Bank**:
-Everything a Week Plan draws from: the Core Bank plus the athlete's Personal Workouts.
+Everything a Week Plan draws from: the Core Bank plus the athlete's Personal Workouts and Personal Exercises.
 _Avoid_: Library, catalogue, database
 
 **Core Bank**:
@@ -57,11 +57,15 @@ The curated part of the Workout Bank that ships with Slow Burn: foundational, wi
 _Avoid_: Default bank, built-ins
 
 **Personal Workout**:
-A Workout the athlete adds themselves, kept in their own repo, which counts as part of their Workout Bank once it passes the Bank's checklist of principles.
+A Workout the athlete adds themselves, kept in their own repo, which counts as part of their Workout Bank once it passes the Bank's checklist of principles. Personal Workouts and Personal Exercises together are the Personal part of the Workout Bank.
 _Avoid_: Custom workout, user workout
 
+**Personal Exercise**:
+An Exercise the athlete adds themselves (a machine at their gym, a move from their physio), kept in their own repo. Like a Personal Workout, it counts as part of their Workout Bank once it passes the Bank's checklist of principles, and it's composed into Sessions like any Core Exercise.
+_Avoid_: Custom exercise, user exercise
+
 **Bank gap**:
-A slot an athlete's Week Templates call for that the Workout Bank can't fill for them: a tiered sport with no Workouts, or Workouts that all need Equipment the athlete lacks. Setup lists gaps in the Athlete Profile's Notes. A gap can be closed by a Personal Workout that passes the checklist, never by an unchecked one made up on the spot. Called a gap for short.
+A slot an athlete's Week Templates call for that the Workout Bank can't fill for them: a tiered sport with no Workouts, or Workouts that all need Equipment the athlete lacks. Setup lists gaps in the Athlete Profile's Notes. A gap can be closed by a Personal Workout or Personal Exercise that passes the checklist, never by an unchecked one made up on the spot. Called a gap for short.
 _Avoid_: Missing workout, hole, TODO
 
 **Ladder**:
