@@ -327,5 +327,13 @@ class SetupCommands(unittest.TestCase):
         self.assertEqual(out, "deleted event 4242\n")
 
 
+class UsageTest(unittest.TestCase):
+    def test_missing_arguments_print_usage(self):
+        with self.assertRaises(SystemExit) as cm:
+            icu.main(["icu.py", "events", "2026-10-26"])
+        self.assertEqual(cm.exception.code, icu.__doc__)
+
+
 if __name__ == "__main__":
     unittest.main()
+

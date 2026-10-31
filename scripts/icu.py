@@ -19,6 +19,7 @@ key in the macOS Keychain. The /setup skill sets all three up.
 """
 import base64
 import datetime as dt
+import inspect
 import json
 import os
 import re
@@ -476,6 +477,10 @@ def main(argv):
         "delete-event": cmd_delete_event,
     }
     if cmd not in commands:
+        sys.exit(__doc__)
+    try:
+        inspect.signature(commands[cmd]).bind(*args)
+    except TypeError:
         sys.exit(__doc__)
     try:
         commands[cmd](*args)
