@@ -29,6 +29,7 @@ The client is `scripts/icu.py`. Run it from the repo root.
 ## 2. Reshuffle
 
 1. Rework only the days from the first affected day onward. Apply every Adjustment rule, and keep the Bank rules: Workouts allowed at this Level, Equipment in the profile, pairings in `pairings`, and no Endurance Workout twice in the week.
+   - **Strength:** a moved Strength Session or Add-on keeps its Exercises. If one is dropped, or the athlete wants different moves, recompose with picking rule 6 so the rest of the week's strength still covers squat, hinge, push, pull, carry and core where it can, and show the chosen Exercises by name.
 2. Offer "swap to Alternative" for an Endurance Session only if `alternatives: on`. Otherwise Endurance Sessions move between days.
 3. If a moved or swapped Session has no Workout the profile can fill, flag the gap and ask what to do instead (a Recovery row, or another real Bank Workout).
 4. Show a before → after table of only the rows that change, with one line on each change's reason.
@@ -39,7 +40,7 @@ The client is `scripts/icu.py`. Run it from the repo root.
 - no back-to-back Quality Sessions;
 - one Session a day;
 - Add-ons only on Endurance and Test rows;
-- every Workout's Equipment is in the profile, and every combined row is an allowed pairing;
+- every Workout's and Exercise's Equipment is in the profile, and every combined row is an allowed pairing;
 - no Quality Session on the first day back from illness.
 
 A same-day swap to the Alternative needs no reshuffle. Log it in Adjustments and skip to step 3's commit.

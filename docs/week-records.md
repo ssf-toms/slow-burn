@@ -19,15 +19,15 @@ ftp: 240
 
 ## Plan
 
-| Day | Date  | Session   | Workout            | Add-on     | Done  |
-|-----|-------|-----------|--------------------|------------|-------|
-| Mon | 10-26 | Recovery  | pt, str-a          |            |       |
-| Tue | 10-27 | Quality   | th-2               |            |       |
-| Wed | 10-28 | Endurance | end-ride-60        | addon-core |       |
-| Thu | 10-29 | Quality   | ss-2               |            |       |
-| Fri | 10-30 | Recovery  | pt                 |            |       |
-| Sat | 10-31 | Endurance | end-ride-60-steps  |            |       |
-| Sun | 11-01 | Endurance | end-ride-60-rolling|            |       |
+| Day | Date  | Session   | Workout                                                        | Add-on                 | Done  |
+|-----|-------|-----------|----------------------------------------------------------------|------------------------|-------|
+| Mon | 10-26 | Strength  | pt, kb-goblet-squat, kb-swing, push-up, band-row, dead-bug     |                        |       |
+| Tue | 10-27 | Quality   | th-2                                                           |                        |       |
+| Wed | 10-28 | Endurance | end-ride-60                                                    | kb-suitcase-carry, bird-dog |  |
+| Thu | 10-29 | Quality   | ss-2                                                           |                        |       |
+| Fri | 10-30 | Recovery  | pt                                                             |                        |       |
+| Sat | 10-31 | Endurance | end-ride-60-steps                                              |                        |       |
+| Sun | 11-01 | Endurance | end-ride-60-rolling                                            |                        |       |
 
 ## Reasoning
 
@@ -47,7 +47,6 @@ Why this Level, what life looks like this week, any Load Warning and how it was 
 ## Next
 
 - Ladders: ride: ss-2 · th-3 · vo2-2 · Tue → vo2max
-- Strength → str-b · Add-on → addon-upper
 - Last FTP test: 2026-10-20
 ```
 
@@ -61,8 +60,8 @@ Why this Level, what life looks like this week, any Load Warning and how it was 
 
 **Plan table.** The client script parses this table, so keep the columns in this order.
 - `Session`: `Recovery` | `Quality` | `Endurance` | `Strength` | `Other` | `Test`. `Strength` and `Other` come from the Week Template's cells of those kinds (`docs/athlete-profile.md`).
-- `Workout`: one or more Bank IDs separated by commas, in the order done (`pt, str-a`). In a Push week, one Quality ride may carry an Extension, `+<minutes>` after its ID (`th-2 +15`): 10–15 extra minutes at Endurance before the cooldown (picking rule 4 in `bank/README.md`). Leave it empty on a `Recovery` row for a full rest day, such as illness. In a partial week (a Week Record started mid-week), leave both `Session` and `Workout` empty on the unplanned days.
-- `Add-on`: one Add-on ID or empty. Only allowed on Endurance and Test rows.
+- `Workout`: one or more Bank IDs separated by commas, in the order done (`pt, kb-goblet-squat, kb-swing, push-up, band-row, dead-bug`). Consecutive Exercise IDs form one composed block, pushed as one note "Strength (N rounds)" with the rounds from `level` (picking rule 6 in `bank/README.md`). So a Workout and a composed block can be paired (`pt, …` above is a PT + strength pairing). In a Push week, one Quality ride may carry an Extension, `+<minutes>` after its ID (`th-2 +15`): 10–15 extra minutes at Endurance before the cooldown (picking rule 4 in `bank/README.md`). Leave it empty on a `Recovery` row for a full rest day, such as illness. In a partial week (a Week Record started mid-week), leave both `Session` and `Workout` empty on the unplanned days.
+- `Add-on`: empty, or the IDs of 2–4 Exercises separated by commas (`kb-suitcase-carry, bird-dog`), pushed as one note "Add-on (N rounds)". Only allowed on Endurance and Test rows.
 - `Done`, filled at the Review:
   - `✓` done
   - `✓ 6` a Quality Session done, with its effort (1–10)
@@ -80,11 +79,10 @@ Why this Level, what life looks like this week, any Load Warning and how it was 
 **Next.** The state carried into the following Check-in:
 - the current step on each Ladder, grouped by sport (`ride: ss-2 · th-3 · vo2-2`), after applying the climb rules in `bank/README.md`;
 - which Ladder the rotating Quality slot uses next (the first Quality day for the maintainer: `Tue → vo2max`);
-- the next Strength and Add-on in each cycle. This line is only present when `strength` is tiered;
 - the date of the last FTP test, when ride is Primary, and of the last run test, when run is Primary.
 
 **Profile changes.** When the Athlete Profile changes (new Equipment, a Sport Tier moved, regenerated Week Templates), say so in that week's Reasoning, so the Records explain why the plan's shape changed.
 
-**Older Records.** Records written before the Athlete Profile existed stay as they are. A Monday row such as `Recovery | pt, str-a` is still a valid Record, and the Load Warning rules only read `level`.
+**Older Records.** Records written before the Athlete Profile existed stay as they are. So do Records naming the retired strength IDs (`str-a`, `addon-core`, …): they're history, not pushed again, and `bank/README.md` maps each to its Exercises. A Monday row such as `Recovery | pt, str-a` stays as written, and the Load Warning rules only read `level`.
 
-Before the first Record exists, start from the starting steps in `bank/README.md` (set by `experience` in the Athlete Profile; `some` gives ss-2, th-2, vo2-2), the rotating Quality slot on its first Ladder (threshold for the maintainer), str-a and addon-core if strength is tiered, and last FTP test unknown (asked at the first Check-in).
+Before the first Record exists, start from the starting steps in `bank/README.md` (set by `experience` in the Athlete Profile; `some` gives ss-2, th-2, vo2-2), the rotating Quality slot on its first Ladder (threshold for the maintainer), and last FTP test unknown (asked at the first Check-in).

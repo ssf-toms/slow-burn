@@ -34,7 +34,7 @@ The intervals.icu API key stays with the user. They store it in the Keychain the
 Ask in the order of the Fields table in `docs/athlete-profile.md`, and skip each field whose "Asked" condition doesn't hold. A field that isn't asked isn't written.
 
 1. **Tiers:** which of ride, run, swim, walk, strength and PT they plan, then the tier of each (Primary, Secondary, Occasional). Then "anything else you do regularly?" for `other`: name, minutes, and whether it counts as training or recovery.
-2. **Equipment:** the tags they have. Tags are literal: `gym` doesn't unlock kettlebell Workouts, so ask what the gym has and add those tags too.
+2. **Equipment:** the tags they have. Tags are literal: `gym` doesn't unlock kettlebell Workouts, so ask what the gym has and add those tags too. With `bands`, ask whether they have a door anchor or post to pull against (`band-anchor`).
 3. **Experience,** then **availability:** `days_per_week`, then fixed days.
 4. **Easy run pace,** then **threshold run pace** (if run is Primary: the pace they could race for about an hour, or their 10 km race pace; if they don't know, leave it out, note it, and make the first run Quality slot the run test), then **pairings** and **Alternatives.**
 5. **FTP, LTHR and max HR,** if ride is tiered. If they have an intervals.icu account, open `https://intervals.icu/settings`: FTP is under Ride → Power level settings, LTHR and max HR under Ride → HR Zone settings. They read the values there, or enter them there if they're new. With no account yet, ask for the numbers now and enter them in intervals.icu in step 5. Leave out any value they don't know, and note it in the profile's Notes.
@@ -49,6 +49,7 @@ Ask in the order of the Fields table in `docs/athlete-profile.md`, and skip each
    - a Primary ride, run or swim with no Ladders, which gets no Quality slot (today, swim);
    - Workouts whose `equipment` has a tag the profile lacks. `smart-trainer` on a `delivery: workout` ride doesn't count: the ride is pushed as outdoor instead. On a `delivery: note` Workout it does count (the FTP test, if ride is Primary);
    - Add-ons only if ride, run or swim is tiered, because an Add-on follows an Endurance Session.
+   - Strength is served by Exercises, not Workouts: run `grep -H '^pattern:\|^equipment:' bank/exercises/*.md`. It's a gap only for a pattern (squat, hinge, push, pull, carry, core) with no Exercise the profile's Equipment fits.
 3. Tell the user each gap in a line, that the Check-in will flag it whenever a slot can't be filled, and that it's never filled with an invented Workout.
 
 **Done when** every tiered activity is either servable or has its gaps listed.

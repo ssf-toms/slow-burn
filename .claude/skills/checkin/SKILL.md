@@ -41,7 +41,7 @@ The client is `scripts/icu.py`. Run it from the repo root.
    - the Review section;
    - the Next block, applying the climbing rules from `bank/README.md` to each Quality Session's effort.
 
-**Done when** every row of last week's Plan has a `Done` value, and the Next block holds every line `docs/week-records.md` requires for this profile: each Ladder's step and the rotating slot's next Ladder (if any Primary sport has Ladders), the next Strength and Add-on (if strength is tiered), and the last FTP test date (if ride is Primary).
+**Done when** every row of last week's Plan has a `Done` value, and the Next block holds every line `docs/week-records.md` requires for this profile: each Ladder's step and the rotating slot's next Ladder (if any Primary sport has Ladders), and the last FTP test date (if ride is Primary).
 
 ## 3. Shape the coming week
 
@@ -54,19 +54,20 @@ The client is `scripts/icu.py`. Run it from the repo root.
 ## 4. Build the Week Plan
 
 1. Take the profile's Week Template column for the chosen Level. The template is the athlete's approved shape: fill it, never regenerate it or use the worked example in `docs/planning-rules.md`.
-2. Fill each cell with Bank Workouts the profile allows, following the picking rules in `bank/README.md` from the Next block. Pick each Dose by Level. Resolve each ` or ` choice, and name the Alternative on Endurance Sessions only if `alternatives: on`.
+2. Fill each cell with Bank Workouts the profile allows, following the picking rules in `bank/README.md` from the Next block. Pick each Dose by Level.
+   - **Strength** (if tiered): compose each Strength Session and Add-on from Exercises with picking rule 6: 5–6 Exercises a Session, 2–3 an Add-on, the week's strength together covering squat, hinge, push, pull, carry and core (a lone Session is full-body), preferring Exercises not in last week's Plan. Write the Exercise IDs in the cell, in order; rounds come from the Level. Resolve each ` or ` choice, and name the Alternative on Endurance Sessions only if `alternatives: on`.
 3. **Gaps:** a cell the Bank can't fill (a sport with no Workouts, missing Equipment, no FTP test without a smart trainer) stays in the plan as a flagged row. Ask the user what to do instead ("swim slot: no pool in the profile → walk or rest?"), and fill it only with a real Bank Workout or a Recovery row.
 4. Fit the plan around the constraints from step 3, following the Adjustment rules.
-5. Show it as the Plan table, adding each Workout's name and minutes for readability, with each gap marked.
+5. Show it as the Plan table, adding each Workout's name and minutes for readability, with each gap marked. For each Strength Session and Add-on, list the chosen Exercises by name with their reps or hold and pattern, and the rounds, so the athlete can swap any they dislike.
 6. Iterate until the user approves.
 
 **Done when** the user has approved a plan where every slot holds a Bank Workout or `other:<id>` from the profile, allowed at this Level, or is a gap the user has decided on; and every rule holds:
-- **Equipment:** every Workout's `equipment` tags are in the profile's `equipment`;
+- **Equipment:** every Workout's and Exercise's `equipment` tags are in the profile's `equipment`;
 - **Pairings:** a row combines Workouts only if the pair is in `pairings`, and nothing is paired with a Quality Session;
 - **Ladders** (if any Primary sport has Ladders): steps match the Next block, and each Quality slot is on the Ladder the pairing rule gives it;
 - no Endurance Workout appears twice in the week;
 - ride lengths are within the Level's range, and an Extension, if any, is on one Quality ride in a Push week (picking rule 4);
-- Strength and the Add-on are next in their cycles (if strength is tiered);
+- strength follows picking rule 6 (if tiered): sizes, all six patterns across the week, no Exercise twice in a row, and mostly different Exercises from last week;
 - the FTP test is placed if it's due (if ride is Primary), and the run test if it's due (if run is Primary).
 
 ## 5. Publish
