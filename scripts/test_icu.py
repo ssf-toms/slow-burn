@@ -16,9 +16,7 @@ import icu  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 EXAMPLE_WEEK = ROOT / "examples" / "2026-W44.md"
 EXAMPLES = ROOT / "examples"
-EQUIPMENT_TAGS = {"bodyweight", "bands", "band-anchor", "kettlebell", "dumbbells", "barbell",
-                  "bench", "cable", "pull-up-bar", "machines", "smart-trainer", "pool", "hr-strap"}
-PATTERNS = {"squat", "hinge", "push", "pull", "carry", "core", "mobility"}
+from icu import EQUIPMENT_TAGS, PATTERNS, SPORTS  # noqa: E402
 
 
 def athlete_dir(test, profile_text):
@@ -99,10 +97,10 @@ class BankFrontmatter(unittest.TestCase):
                 self.assertIn("band-anchor", self.bank[xid]["equipment"])
 
     def test_each_pattern_has_options_for_each_home_equipment_set(self):
-        for kit in ("bodyweight", "kettlebell", "dumbbells"):
+        for tag in ("bodyweight", "kettlebell", "dumbbells"):
             for pattern in PATTERNS - {"mobility"}:
-                with self.subTest(kit=kit, pattern=pattern):
-                    self.assertTrue(any(e["pattern"] == pattern and e["equipment"] == [kit]
+                with self.subTest(equipment=tag, pattern=pattern):
+                    self.assertTrue(any(e["pattern"] == pattern and e["equipment"] == [tag]
                                         for e in self.bank.values() if e["kind"] == "exercise"))
 
     def test_exercises_take_their_sport_from_their_pattern(self):
@@ -149,10 +147,9 @@ class BankFrontmatter(unittest.TestCase):
                         self.assertNotEqual(self.bank[a]["sport"], w["sport"])
 
     def test_every_workout_is_a_known_sport(self):
-        sports = {"ride", "run", "swim", "walk", "strength", "mobility"}
         for wid, w in self.bank.items():
             with self.subTest(workout=wid):
-                self.assertIn(w["sport"], sports)
+                self.assertIn(w["sport"], SPORTS)
 
     def test_no_pt_kind_sport_or_workout_is_left_in_the_core_bank(self):
         self.assertNotIn("pt", self.bank)
