@@ -24,7 +24,7 @@ The client is `scripts/icu.py`. Run it from the repo root.
 2. **Target week:** the coming Mon–Sun. If today is Monday and the current week has no Week Record, plan the current week instead.
 3. **Last week:** the most recent Week Record in `athlete/weeks/`. Also read the headers of the two before it.
 4. **Ride data**, only if ride is tiered: run `./scripts/icu.py rides <last Mon> <last Sun>` and `./scripts/icu.py fitness <today − 14> <today>`.
-5. **No Week Record yet?** Use the starting state at the end of `docs/week-records.md`. If ride is Primary, ask for the date of the last FTP test. Skip step 2.
+5. **No Week Record yet?** Use the starting state at the end of `docs/week-records.md`. If ride is Primary, ask for the date of the last FTP test, and if run is Primary, of the last run test. Skip step 2.
 
 **Done when** you hold the profile and its templates, last week's Plan and Next block (or the starting state), and the Levels of the last three weeks; plus, if ride is tiered, last week's rides and the latest fitness, fatigue, form and ramp numbers.
 
@@ -68,7 +68,7 @@ The client is `scripts/icu.py`. Run it from the repo root.
 - no Endurance Workout appears twice in the week;
 - ride lengths are within the Level's range, and an Extension, if any, is on one Quality ride in a Push week (picking rule 4);
 - strength follows picking rule 6 (if tiered): sizes, all six patterns across the week, no Exercise twice in a row, and mostly different Exercises from last week;
-- the FTP test is placed if it's due (if ride is Primary).
+- the FTP test is placed if it's due (if ride is Primary), and the run test if it's due (if run is Primary).
 
 ## 5. Publish
 
