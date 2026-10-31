@@ -5,7 +5,7 @@ kind: endurance
 sport: ride
 duration_min: 50
 variant_group: endurance-ride
-alternative: run-easy-6-8
+alternative: [swim-drills-1800, run-easy-6-8]
 equipment: [smart-trainer]
 delivery: workout
 ---
@@ -27,4 +27,4 @@ Cooldown
 
 Gentle swells inside Zone 2, as if on rolling roads. The 74% parts should still feel easy.
 
-Alternative: swap this for [run-easy-6-8](../endurance/run-easy-6-8.md) on the day.
+Alternative: swap this for [swim-drills-1800](../endurance/swim-drills-1800.md) or [run-easy-6-8](../endurance/run-easy-6-8.md) on the day.

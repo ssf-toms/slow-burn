@@ -6,7 +6,7 @@ sport: ride
 duration_min: 75
 variant_group: endurance-ride
 levels: [push]
-alternative: run-easy-10-12
+alternative: [run-easy-10-12, swim-steady-2500]
 equipment: [smart-trainer]
 delivery: workout
 ---
@@ -29,4 +29,4 @@ Cooldown
 
 Starts very easy and finishes at the top of Zone 2. Push weeks only.
 
-Alternative: swap this for [run-easy-10-12](../endurance/run-easy-10-12.md) on the day.
+Alternative: swap this for [run-easy-10-12](../endurance/run-easy-10-12.md) or [swim-steady-2500](../endurance/swim-steady-2500.md) on the day.

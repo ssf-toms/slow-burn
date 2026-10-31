@@ -5,7 +5,7 @@ kind: endurance
 sport: ride
 duration_min: 60
 variant_group: endurance-ride
-alternative: run-easy-strides
+alternative: [run-easy-strides, swim-drills-1800]
 equipment: [smart-trainer]
 delivery: workout
 ---
@@ -30,4 +30,4 @@ Cooldown
 
 Zone 2 with six 30-second pick-ups to keep the legs snappy. They're brisk, not sprints, and add almost no fatigue.
 
-Alternative: swap this for [run-easy-strides](../endurance/run-easy-strides.md) on the day.
+Alternative: swap this for [run-easy-strides](../endurance/run-easy-strides.md) or [swim-drills-1800](../endurance/swim-drills-1800.md) on the day.

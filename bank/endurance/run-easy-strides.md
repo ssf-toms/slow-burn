@@ -5,7 +5,7 @@ kind: endurance
 sport: run
 duration_min: 48
 variant_group: endurance-run
-alternative: end-ride-50-rolling
+alternative: [end-ride-50-rolling, swim-drills-1800]
 equipment: []
 delivery: note
 ---
@@ -14,4 +14,4 @@ delivery: note
 
 Easy 6–8 km, then 6 × 20 s strides on flat ground: relaxed and fast (not a sprint), walking back between each.
 
-Alternative: swap this for [end-ride-50-rolling](../endurance/end-ride-50-rolling.md) on the day.
+Alternative: swap this for [end-ride-50-rolling](../endurance/end-ride-50-rolling.md) or [swim-drills-1800](../endurance/swim-drills-1800.md) on the day.
