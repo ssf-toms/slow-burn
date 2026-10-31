@@ -60,7 +60,7 @@ Why this Level, what life looks like this week, any Load Warning and how it was 
 - `ftp`: the FTP the week was planned against.
 
 **Plan table.** The client script parses this table, so keep the columns in this order.
-- `Session`: `Recovery` | `Quality` | `Endurance` | `Test`.
+- `Session`: `Recovery` | `Quality` | `Endurance` | `Strength` | `Other` | `Test`. `Strength` and `Other` come from the Week Template's cells of those kinds (`docs/athlete-profile.md`).
 - `Workout`: one or more Bank IDs separated by commas, in the order done (`pt, str-a`). Leave it empty on a `Recovery` row for a full rest day, such as illness. In a partial week (a Week Record started mid-week), leave both `Session` and `Workout` empty on the unplanned days.
 - `Add-on`: one Add-on ID or empty. Only allowed on Endurance and Test rows.
 - `Done`, filled at the Review:

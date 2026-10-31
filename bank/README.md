@@ -97,6 +97,6 @@ Runs (easy pace, `{easy_run_pace}` from the Athlete Profile):
 
    If `alternatives: on`, every Endurance Session names an Alternative of similar effort in another tiered sport, which you can swap in on the day.
 5. **Endurance variety:** never the same Workout twice in one week. Prefer a different Workout from the one on the same day last week.
-6. **Strength:** only if strength is tiered. Strength Sessions cycle A → B → C, and Add-ons cycle core → upper → posterior, each continuing from last week.
+6. **Strength:** only if strength is tiered. Strength Sessions cycle A → B → C, and Add-ons cycle core → upper → posterior, each continuing from last week. Skip a Workout whose Equipment the profile lacks; if none in a cycle fits, it's a gap.
 7. **FTP test:** only if ride is Primary. When due (about 6 weeks since the last test, and the previous week was Light), it replaces the week's first ride Quality Session. A Test row is `ftp-ramp-test, test-spin`, optionally with an Add-on, and comes to about 60–75′.
 8. **Walk:** for Recovery Days the template gives a walk, or as a stand-in on the day for any Session when you're too tired. Never a recovery ride.
