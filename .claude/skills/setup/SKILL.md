@@ -17,7 +17,7 @@ Ask the user's decisions with the AskUserQuestion tool, recommended option first
 
 The client is `scripts/icu.py`. Run it from the repo root as `python3 scripts/icu.py <command>`. If `python3` isn't found (usual on Windows), use `py` instead, and keep using it for the rest of the session. Give web pages as links for the user to open.
 
-The intervals.icu API key stays with the user. It lives in `.intervals-key`, which only the user edits. Never read, print or `cat` that file, and never put the key in `.env`. If they paste a key into the chat, tell them to revoke it in intervals.icu and make a new one.
+The intervals.icu API key stays with the user. It lives in `.intervals-key`, which only the user edits. Never ask for it, and never read, print or `cat` that file, or put the key in `.env`. If they paste a key into the chat, tell them to revoke it in intervals.icu and make a new one.
 
 ## 1. Detect
 

@@ -1015,12 +1015,13 @@ class ApiKey(unittest.TestCase):
     def setUp(self):
         self.root = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.root)
-        patcher = mock.patch.object(icu, "ROOT", self.root)
+        patcher = mock.patch.object(icu, "KEY_FILE", self.root / ".intervals-key")
         patcher.start()
         self.addCleanup(patcher.stop)
 
     def key_file(self, text):
-        (self.root / ".intervals-key").write_bytes(text.encode())
+        # write_bytes, not write_text: it keeps "\r\n" from being translated
+        icu.KEY_FILE.write_bytes(text.encode())
 
     def test_the_env_var_wins_over_the_file(self):
         self.key_file("from-file\n")

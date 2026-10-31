@@ -32,6 +32,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+KEY_FILE = ROOT / ".intervals-key"  # the API key; only the user edits it
 API = "https://intervals.icu/api/v1"
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 SESSION_KINDS = {"Recovery", "Quality", "Endurance", "Test", "Strength", "Other"}
@@ -91,8 +92,7 @@ def api_key():
     key = os.environ.get("INTERVALS_API_KEY")
     if key:
         return key
-    path = ROOT / ".intervals-key"
-    key = path.read_text(encoding="utf-8").strip() if path.exists() else ""
+    key = KEY_FILE.read_text(encoding="utf-8").strip() if KEY_FILE.exists() else ""
     if key:
         return key
     sys.exit("No intervals.icu API key. Paste it into .intervals-key at the repo root "
