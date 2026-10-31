@@ -347,13 +347,17 @@ def build_events(fm, days, bank, profile):
         dose = (w.get("dose") or {}).get(level)
         return out + (f"\n\nToday: {dose}" if dose else "")
 
-    def combined(workouts):
-        return (" + ".join(w["name"] for w in workouts),
-                "\n\n".join(description(w) for w in workouts))
-
     def offered(alt):
         return (alternatives and alt is not None and alt["sport"] in tiered
                 and all(t in equipment for t in needed_equipment(alt)))
+
+    def alternative_line(w):
+        alt = bank.get(w.get("alternative"))
+        return f"\n\nAlternative: {alt['name']}. {description(alt)}" if offered(alt) else ""
+
+    def combined(workouts):
+        return (" + ".join(w["name"] for w in workouts),
+                "\n\n".join(description(w) + alternative_line(w) for w in workouts))
 
     events, problems = [], []
     if sum(1 for d in days if d.get("extend")) > 1:
@@ -378,9 +382,7 @@ def build_events(fm, days, bank, profile):
                 name += f" +{minutes}′"
                 text = extended(text, minutes)
                 desc += f"\n\nToday: +{minutes} min at Endurance ({EXTENSION_PCT}%) before the cooldown."
-            alt = bank.get(ride.get("alternative"))
-            if offered(alt):
-                desc += f"\n\nAlternative: {alt['name']}. {description(alt)}"
+            desc += alternative_line(ride)
             desc += "\n\n" + text
             events.append(dict(category="WORKOUT", type="Ride", indoor=indoor, name=name,
                                description=desc, start_date_local=f"{d['date']}T00:00:00",

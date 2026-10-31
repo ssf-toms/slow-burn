@@ -80,9 +80,9 @@ class BankFrontmatter(unittest.TestCase):
         self.assertEqual(self.bank["run-easy-6-8"]["equipment"], [])
         self.assertEqual(self.bank["pt"]["equipment"], [])
 
-    def test_endurance_rides_name_an_alternative_in_the_bank(self):
+    def test_endurance_rides_and_runs_name_an_alternative_in_the_bank(self):
         for wid, w in self.bank.items():
-            if w["kind"] == "endurance" and w["sport"] == "ride":
+            if w["kind"] == "endurance" and w["sport"] in ("ride", "run"):
                 with self.subTest(workout=wid):
                     self.assertNotIn("run_alternative", w)
                     self.assertIn(w.get("alternative"), self.bank)
@@ -304,6 +304,17 @@ class PushedEvents(unittest.TestCase):
         e = event(self.events(INDOOR_PROFILE, {"Wed": ("Endurance", "end-ride-60")}), "Wed")
         self.assertIn("Alternative: Easy run 8–10 km", e["description"])
 
+
+    def test_run_note_offers_its_ride_alternative(self):
+        e = event(self.events(example_profile(), {"Wed": ("Endurance", "run-easy-8-10")}), "Wed")
+        self.assertEqual(e["category"], "NOTE")
+        self.assertIn("Alternative: Endurance 60.", e["description"])
+        self.assertNotIn("swap this for", e["description"])
+
+    def test_run_alternative_line_only_when_alternatives_are_on(self):
+        off = example_profile().replace("alternatives: on\n", "")
+        e = event(self.events(off, {"Wed": ("Endurance", "run-easy-8-10")}), "Wed")
+        self.assertNotIn("Alternative:", e["description"])
 
 class Extensions(unittest.TestCase):
     def setUp(self):
