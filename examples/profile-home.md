@@ -6,7 +6,8 @@ tiers:
 other:
   - {id: pilates, name: "Pilates class", minutes: 45, counts_as: training}
   - {id: yin-yoga, name: "Yin yoga video", minutes: 30, counts_as: recovery}
-equipment: [bodyweight, dumbbells]
+places:
+  home: [bodyweight, dumbbells]
 availability:
   days_per_week: 4
   fixed:
