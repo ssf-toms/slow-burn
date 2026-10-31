@@ -17,8 +17,8 @@ Ride targets are **%FTP** with simple steps and repeats, and no ramps or cadence
 |-------|-------|---------|
 | `id` | lowercase, dashes | The name used in Week Records. Same as the file name. |
 | `name` | string | The calendar title. |
-| `kind` | `quality` \| `endurance` \| `pt` \| `recovery` \| `test` | What the Workout is for. |
-| `sport` | `ride` \| `run` \| `swim` \| `walk` \| `strength` \| `pt` | The activity. |
+| `kind` | `quality` \| `endurance` \| `mobility` \| `recovery` \| `test` | What the Workout is for. |
+| `sport` | `ride` \| `run` \| `swim` \| `walk` \| `strength` \| `mobility` | The activity. |
 | `duration_min` | number | Typical length in minutes. |
 | `equipment` | list of tags, `[]` for none | The Equipment the Workout needs, from the tags in `docs/athlete-profile.md` (`bodyweight`, `bands`, `band-anchor`, `kettlebell`, `dumbbells`, `barbell`, `bench`, `cable`, `pull-up-bar`, `machines`, `smart-trainer`, `pool`, `hr-strap`). It can only be planned on a day whose Place has every tag. The one exception: `smart-trainer` on a `delivery: workout` ride only decides whether it's pushed as indoor or outdoor, so the ride can be planned without one. Required in every file. |
 | `delivery` | `workout` \| `note` | `workout` is pushed as a structured workout (rides). `note` is a calendar note. |
@@ -38,7 +38,7 @@ Run Workouts write their pace as `{easy_run_pace}` or `{threshold_run_pace}`, fi
 
 ## Exercises
 
-A single strength or mobility movement (ADR 0004). Strength Sessions and Strength Add-ons have no Workout of their own: each Check-in composes them from Exercises, and the Week Plan lists the Exercise IDs. Exercise IDs share one namespace with Workout IDs, so no two files may use the same `id`.
+A single strength or mobility movement (ADR 0004). Strength Sessions and Strength Add-ons have no Workout of their own: each Check-in composes them from Exercises, and the Week Plan lists the Exercise IDs. Mobility Sessions are composed from `mobility` Exercises too, or use a whole `kind: mobility` Workout (picking rule 9). Exercise IDs share one namespace with Workout IDs, so no two files may use the same `id`.
 
 | Field | Value | Meaning |
 |-------|-------|---------|
@@ -150,16 +150,16 @@ Runs are at easy pace (`{easy_run_pace}` from the Athlete Profile).
 
 Swims need a `pool` and are pushed as notes. Each is a warm-up, drills, a main set by distance and feel (easy RPE 3–4/10, steady 5/10) and a cool-down. There are no swim Ladders yet.
 
-### Strength, PT, recovery, test
+### Strength, mobility, recovery, test
 
 - **Strength Sessions** and **Strength Add-ons** are composed from the Exercises below (picking rule 6). A Strength Session of 5–6 Exercises is about 30–40′; an Add-on of 2–3 is 12–15′, after an Endurance Session or a Test Session's spin only.
-- **PT:** [pt](pt/pt.md), ~30′; contents are your own routine.
-- **Recovery:** [rec-walk](recovery/rec-walk.md), a 30–60′ walk. A Recovery Day is PT, a walk, rest or a recovery-type `other` activity, never a ride (picking rule 8).
+- **Mobility Sessions** (~30′) come from the whole Bank, Core and Personal (picking rule 9). The Core Bank has no mobility Workout: a routine of your own, such as a physical-therapy routine, is a Personal Workout with `kind: mobility` and `sport: mobility` (`/add-workout`).
+- **Recovery:** [rec-walk](recovery/rec-walk.md), a 30–60′ walk. A Recovery Day is a Mobility Session, a walk, rest or a recovery-type `other` activity, never a ride (picking rule 8).
 - **FTP test:** [ftp-ramp-test](test/ftp-ramp-test.md), the MyWhoosh Ramp Test (a calendar note pointing to MyWhoosh, not a pushed workout), then [test-spin](test/test-spin.md), a 20′ easy spin.
 
 ### Exercises
 
-By pattern and Equipment set. `*` marks a band move that also needs `band-anchor`. Gym moves list their tags (`barbell`, `bench`, `cable`, `pull-up-bar`); a gym Place usually lists dumbbells and kettlebells too, so their carries serve there. `mobility` Exercises come later.
+By pattern and Equipment set. `*` marks a band move that also needs `band-anchor`. Gym moves list their tags (`barbell`, `bench`, `cable`, `pull-up-bar`); a gym Place usually lists dumbbells and kettlebells too, so their carries serve there. `mobility` Exercises are listed after the table.
 
 | Pattern | Bodyweight | Bands | Kettlebell | Dumbbells | Gym |
 |---|---|---|---|---|---|
@@ -169,6 +169,16 @@ By pattern and Equipment set. `*` marks a band move that also needs `band-anchor
 | pull | [prone-pulldown](exercises/prone-pulldown.md)<br>[prone-ytw](exercises/prone-ytw.md) | [band-bent-over-row](exercises/band-bent-over-row.md)<br>[band-face-pull](exercises/band-face-pull.md)*<br>[band-pull-apart](exercises/band-pull-apart.md)<br>[band-row](exercises/band-row.md)* | [kb-high-pull](exercises/kb-high-pull.md)<br>[kb-row](exercises/kb-row.md) | [db-reverse-fly](exercises/db-reverse-fly.md)<br>[db-row](exercises/db-row.md) | [barbell-row](exercises/barbell-row.md)<br>[cable-row](exercises/cable-row.md)<br>[pull-up](exercises/pull-up.md) |
 | carry | [bear-crawl](exercises/bear-crawl.md) | – | [kb-rack-carry](exercises/kb-rack-carry.md)<br>[kb-suitcase-carry](exercises/kb-suitcase-carry.md) | [db-overhead-carry](exercises/db-overhead-carry.md)<br>[db-suitcase-carry](exercises/db-suitcase-carry.md) | – |
 | core | [bear-hold](exercises/bear-hold.md)<br>[bicycle-crunch](exercises/bicycle-crunch.md)<br>[bird-dog](exercises/bird-dog.md)<br>[dead-bug](exercises/dead-bug.md)<br>[hollow-hold](exercises/hollow-hold.md)<br>[plank-shoulder-tap](exercises/plank-shoulder-tap.md)<br>[reverse-crunch](exercises/reverse-crunch.md)<br>[side-plank](exercises/side-plank.md)<br>[side-plank-reach-through](exercises/side-plank-reach-through.md) | [band-woodchop](exercises/band-woodchop.md)*<br>[pallof-press](exercises/pallof-press.md)* | [kb-halo](exercises/kb-halo.md)<br>[kb-russian-twist](exercises/kb-russian-twist.md) | [db-russian-twist](exercises/db-russian-twist.md)<br>[db-woodchop](exercises/db-woodchop.md) | [cable-pallof-press](exercises/cable-pallof-press.md)<br>[hanging-knee-raise](exercises/hanging-knee-raise.md) |
+
+**Mobility,** held for time or done as slow reps:
+
+| Area | Bodyweight | Bands |
+|---|---|---|
+| hips | [hip-90-90](exercises/hip-90-90.md)<br>[couch-stretch](exercises/couch-stretch.md)<br>[pigeon-stretch](exercises/pigeon-stretch.md)<br>[deep-squat-hold](exercises/deep-squat-hold.md)<br>[worlds-greatest-stretch](exercises/worlds-greatest-stretch.md)<br>[leg-swing](exercises/leg-swing.md) | – |
+| thoracic spine | [cat-cow](exercises/cat-cow.md)<br>[thread-the-needle](exercises/thread-the-needle.md)<br>[open-book](exercises/open-book.md) | – |
+| ankles | [ankle-knee-to-wall](exercises/ankle-knee-to-wall.md)<br>[calf-stretch](exercises/calf-stretch.md) | – |
+| hamstrings | [hamstring-fold](exercises/hamstring-fold.md) | [band-hamstring-stretch](exercises/band-hamstring-stretch.md) |
+| shoulders | [wall-slide](exercises/wall-slide.md)<br>[puppy-stretch](exercises/puppy-stretch.md) | [band-dislocate](exercises/band-dislocate.md) |
 
 Thin spots: a bodyweight-only profile has one carry (`bear-crawl`), and bands alone have none, so a week for those profiles covers carry with `bear-crawl` or another kit's carry.
 
@@ -184,6 +194,8 @@ Thin spots: a bodyweight-only profile has one carry (`bear-crawl`), and bands al
 | `addon-core` | dead-bug, bird-dog, side-plank, pallof-press |
 | `addon-upper` | band-row, push-up, band-pull-apart, kb-halo, band-face-pull |
 | `addon-posterior` | kb-swing, banded-glute-bridge, kb-rdl, superman-hold |
+
+The Core `pt` Workout (`kind: pt`, `sport: pt`) is retired too, with the `pt` tier, which is now `mobility`. A PT routine is now a Personal mobility Workout (the maintainer's keeps the ID `pt`, in `athlete/bank/workouts/pt.md`), or a Mobility Session is composed from the mobility Exercises above (picking rule 9).
 
 ## Picking rules (used by the Check-in)
 
@@ -228,3 +240,9 @@ Thin spots: a bodyweight-only profile has one carry (`bear-crawl`), and bands al
    - **FTP test:** only if ride is Primary. A Test row is `ftp-ramp-test, test-spin`, optionally with an Add-on, and comes to about 60–75′.
    - **Run test:** only if run is Primary. A Test row is `run-test-20` alone, about 50′. Not in the same week as the FTP test.
 8. **Walk:** for Recovery Days the template gives a walk, or as a stand-in on the day for any Session when you're too tired. Never a recovery ride.
+9. **Mobility:** only if mobility is tiered. A Mobility Session is one of these, from Core and Personal alike:
+   - a whole `kind: mobility` Workout (such as a physical-therapy routine kept as a Personal Workout);
+   - 6–8 composed `mobility` Exercises whose Equipment the day's Place has;
+   - a whole `kind: mobility` Workout followed by 2–3 mobility Exercises.
+
+   It's one activity, so the last isn't a Pairing. Composed mobility is 2 rounds at every Level, moving slowly between the holds; `push-week` pushes it as one note, "Mobility (2 rounds)". Vary the mix across the week, following any preference in the profile's Notes ("PT most days, Bank mobility now and then"): nothing in the profile locks a routine in. Prefer mobility Exercises not used last week, and cover hips, thoracic spine, ankles, hamstrings and shoulders across the week. With `mobility+strength` in `pairings`, a Mobility Session may come before a Strength Session in one row: a mobility block and a strength block are separate notes even when their Exercise IDs are adjacent.

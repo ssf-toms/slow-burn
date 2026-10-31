@@ -32,7 +32,7 @@ The client is `scripts/icu.py`. Run it from the repo root.
 
 1. Match the rides (if any) to the Plan rows.
 2. Ask the user about the rest:
-   - the Sessions not in the ride data: runs, swims, strength, PT, walks, `other` activities;
+   - the Sessions not in the ride data: runs, swims, strength, mobility, walks, `other` activities;
    - the effort (1–10) for each Quality Session;
    - anything that was missed or swapped;
    - how the week felt overall.
@@ -56,9 +56,10 @@ The client is `scripts/icu.py`. Run it from the repo root.
 1. Take the profile's Week Template column for the chosen Level. The template is the athlete's approved shape: fill it, never regenerate it or use the worked example in `docs/planning-rules.md`.
 2. Fill each cell with Bank Workouts the profile allows, following the picking rules in `bank/README.md` from the Next block. Pick each Dose by Level.
    - **Strength** (if tiered): compose each Strength Session and Add-on from Exercises with picking rule 6: 5–6 Exercises a Session, 2–3 an Add-on, the week's strength together covering squat, hinge, push, pull, carry and core (a lone Session is full-body), preferring Exercises not in last week's Plan. Write the Exercise IDs in the cell, in order; rounds come from the Level. Resolve each ` or ` choice, and name the Alternative on Endurance Sessions only if `alternatives: on`.
+   - **Mobility** (if tiered): fill each Mobility Session with picking rule 9: a whole `kind: mobility` Workout, 6–8 mobility Exercises, or a Workout plus 2–3 Exercises. Vary the mix across the week, following any preference in the profile's Notes, and prefer mobility Exercises not in last week's Plan.
 3. **Gaps:** a slot a Personal Workout or Exercise fills is not a gap, even if the profile's Notes still list it: say so, so Setup's Notes can drop it. A cell the Workout Bank, Core and Personal, can't fill (a sport with no Workouts, missing Equipment, no FTP test without a smart trainer) stays in the plan as a flagged row. Ask the user what to do instead ("swim slot: no pool in the profile → walk or rest?"), and fill it only with a Bank Workout, a Recovery row, or a new Personal file added through `/add-workout` first.
 4. Fit the plan around the constraints from step 3, following the Adjustment rules.
-5. Show it as the Plan table, adding each Workout's name and minutes for readability, with each gap marked. For each Strength Session and Add-on, list the chosen Exercises by name with their reps or hold and pattern, and the rounds, so the athlete can swap any they dislike.
+5. Show it as the Plan table, adding each Workout's name and minutes for readability, with each gap marked. For each Strength Session, Add-on and composed Mobility Session, list the chosen Exercises by name with their reps or hold and pattern, and the rounds, so the athlete can swap any they dislike.
 6. Iterate until the user approves.
 
 **Done when** the user has approved a plan where every slot holds a Bank Workout or `other:<id>` from the profile, allowed at this Level, or is a gap the user has decided on; and every rule holds:
