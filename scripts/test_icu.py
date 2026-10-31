@@ -168,7 +168,7 @@ class BankFrontmatter(unittest.TestCase):
                 self.assertNotIn("5:45", self.bank[wid]["prose"])
 
 
-# An indoor rider like the one examples/2026-W44.md was planned for.
+# An indoor rider with PT, like the maintainer.
 INDOOR_PROFILE = """---
 tiers:
   ride: primary
@@ -226,8 +226,9 @@ def dry_run(path):
 
 
 class PushWeekDryRun(unittest.TestCase):
+    """examples/2026-W44.md is a completed week for examples/profile.md, the triathlete."""
     def setUp(self):
-        with_pt(self, INDOOR_PROFILE)
+        athlete_dir(self, example_profile("profile.md"))
 
     def test_example_week_has_no_plan_problems(self):
         fm, days = icu.parse_week(EXAMPLE_WEEK)
@@ -242,7 +243,7 @@ class PushWeekDryRun(unittest.TestCase):
         self.assertNotIn("swap this for", wed["description"])  # Bank-only link line
 
     def test_dry_run_prints_the_events_without_credentials(self):
-        self.assertIn("dry run: 10 to upsert", dry_run(EXAMPLE_WEEK))
+        self.assertIn("dry run: 8 to upsert", dry_run(EXAMPLE_WEEK))
 
 
 class ExampleProfileWeeks(unittest.TestCase):

@@ -155,7 +155,7 @@ Swims need a `pool` and are pushed as notes. Each is a warm-up, drills, a main s
 - **Strength Sessions** and **Strength Add-ons** are composed from the Exercises below (picking rule 6). A Strength Session of 5–6 Exercises is about 30–40′; an Add-on of 2–3 is 12–15′, after an Endurance Session or a Test Session's spin only.
 - **Mobility Sessions** (~30′) come from the whole Bank, Core and Personal (picking rule 9). The Core Bank has no mobility Workout: a routine of your own, such as a physical-therapy routine, is a Personal Workout with `kind: mobility` and `sport: mobility` (`/add-workout`).
 - **Recovery:** [rec-walk](recovery/rec-walk.md), a 30–60′ walk. A Recovery Day is a Mobility Session, a walk, rest or a recovery-type `other` activity, never a ride (picking rule 8).
-- **FTP test:** [ftp-ramp-test](test/ftp-ramp-test.md), the MyWhoosh Ramp Test (a calendar note pointing to MyWhoosh, not a pushed workout), then [test-spin](test/test-spin.md), a 20′ easy spin.
+- **FTP test:** [ftp-ramp-test](test/ftp-ramp-test.md), the MyWhoosh Ramp Test (a calendar note pointing to MyWhoosh, not a pushed workout), then [test-spin](test/test-spin.md), a 20′ easy spin. Without a smart trainer there's no Core FTP test: add your own as a Personal test Workout (picking rule 7).
 
 ### Exercises
 
@@ -232,12 +232,12 @@ The Core `pt` Workout (`kind: pt`, `sport: pt`) is retired too, with the `pt` ti
 5. **Endurance variety:** never the same Workout twice in one week. Prefer a different Workout from the one on the same day last week.
 6. **Strength:** only if strength is tiered. Compose each Strength Session and Add-on from the Exercises whose Equipment the day's Place has:
    - **Size:** a Strength Session has 5–6 Exercises, an Add-on 2–3. (`push-week` accepts 3–8 and 2–4.) No Exercise twice in one row.
-   - **Balance:** all the strength in the week, Sessions and Add-ons together, covers squat, hinge, push, pull, carry and core. A lone Strength Session in a week is full-body, covering all six itself.
+   - **Balance:** all the strength in the week, Sessions and Add-ons together, covers squat, hinge, push, pull, carry and core. A lone Strength Session in a week is full-body, covering all six itself. A week whose only strength is an Add-on or two (strength Occasional, say) can't hold all six: cover them over two or three weeks, starting with the patterns last week's Add-ons missed.
    - **Variety:** prefer Exercises not used last week (read last week's Plan rows), and vary between Sessions in the same week.
    - **Dose:** rounds by Level, Light 2, Normal 3, Push 4. `push-week` writes the rounds into the note, so the Plan row lists only the Exercise IDs, in order.
    - **Gap:** if no Exercise fits a pattern, cover it elsewhere in the week; if nothing in the week can, it's a gap.
 7. **Tests:** each sport's test resets its Ladder targets. When due (about 6 weeks since that sport's last test, and the previous week was Light), it replaces the week's first Quality Session of that sport. After it, drop a step on that sport's Ladders, and bring it forward when a top step is done (rule 2).
-   - **FTP test:** only if ride is Primary. A Test row is `ftp-ramp-test, test-spin`, optionally with an Add-on, and comes to about 60–75′.
+   - **FTP test:** only if ride is Primary. A Test row is `ftp-ramp-test, test-spin`, optionally with an Add-on, and comes to about 60–75′. Without a smart trainer the Core Bank has no FTP test: a Personal `kind: test`, `sport: ride` Workout (an outdoor 20′ test, say, added with `/add-workout`) takes its place, alone or followed by `test-spin`.
    - **Run test:** only if run is Primary. A Test row is `run-test-20` alone, about 50′. Not in the same week as the FTP test.
 8. **Walk:** for Recovery Days the template gives a walk, or as a stand-in on the day for any Session when you're too tired. Never a recovery ride.
 9. **Mobility:** only if mobility is tiered. A Mobility Session is one of these, from Core and Personal alike:

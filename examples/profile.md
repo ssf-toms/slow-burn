@@ -52,5 +52,5 @@ How the rules in `docs/planning-rules.md` were applied:
 
 - Rides are outdoors. With no `smart-trainer`, rides are pushed as outdoor and the MyWhoosh steps are skipped.
 - Gaps found at Setup (for the Bank, item 3):
-  - **The FTP test** (`ftp-ramp-test`) is a MyWhoosh Ramp Test, which needs a smart trainer. Ride is Primary, so a test is due, but there's no outdoor test.
+  - **The FTP test** (`ftp-ramp-test`) is a MyWhoosh Ramp Test, which needs a smart trainer. Ride is Primary, so a test is due, but the Core Bank has no outdoor test. An outdoor 20′ test with a power meter could be added as a Personal Workout with `/add-workout`.
   - **Strength Add-ons** are composed from the bodyweight and band Exercises (no `band-anchor`, so no Pallof press or band row). The gym Place lists only `pool`: list more of its kit (`barbell`, `dumbbells`, `cable`, …) to plan strength there.

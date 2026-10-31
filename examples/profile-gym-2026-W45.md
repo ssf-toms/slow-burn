@@ -23,4 +23,4 @@ An invented example: a Normal week planned from `examples/profile-gym.md`, the a
 
 ## Reasoning
 
-The Normal template from the profile. Wednesday is the fixed gym day: a barbell Strength Session with pull-ups and hanging knee raises from the gym's kit. Monday and Friday are at home, composed from the bodyweight and dumbbell Exercises. Each Session covers squat, hinge, push, pull, carry and core, with no Exercise used twice in the week. A Normal week gives 3 rounds. Saturday's run is 40–50′.
+The Normal template from the profile. Wednesday is the fixed gym day: a barbell Strength Session with pull-ups and hanging knee raises from the gym's kit. Monday and Friday are at home, composed from the bodyweight and dumbbell Exercises. Each Session covers squat, hinge, push, pull, carry and core, with no Exercise used twice in the week. A Normal week gives 3 rounds. Saturday's run is 45′, inside Normal's 45–60′.

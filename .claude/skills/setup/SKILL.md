@@ -47,7 +47,7 @@ Ask in the order of the Fields table in `docs/athlete-profile.md`, and skip each
 2. For each tiered activity, list what the Bank can't serve:
    - a tiered activity with no Workout of that `sport`;
    - a Primary ride, run or swim with no Ladders, which gets no Quality slot (today, swim);
-   - Workouts whose `equipment` has a tag no Place has. `smart-trainer` on a `delivery: workout` ride doesn't count: the ride is pushed as outdoor instead. On a `delivery: note` Workout it does count (the FTP test, if ride is Primary);
+   - Workouts whose `equipment` has a tag no Place has. `smart-trainer` on a `delivery: workout` ride doesn't count: the ride is pushed as outdoor instead. On a `delivery: note` Workout it does count (the FTP test, if ride is Primary: without a smart trainer, offer `/add-workout` for an outdoor test as a Personal `kind: test` ride);
    - Add-ons only if ride, run or swim is tiered, because an Add-on follows an Endurance Session.
    - Strength is served by Exercises, not Workouts: run `grep -rH '^pattern:\|^equipment:' bank/exercises athlete/bank/exercises`. It's a gap only for a pattern (squat, hinge, push, pull, carry, core) with no Exercise that any Place's Equipment fits.
    - Mobility is served by `kind: mobility` Workouts and `mobility` Exercises; the bodyweight ones fit every Place. If the athlete has a routine of their own (physical therapy, say), offer `/add-workout` for it as a Personal mobility Workout, and write any preference ("my routine most days, Bank mobility now and then") as a line in the profile's Notes.
