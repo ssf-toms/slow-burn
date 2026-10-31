@@ -3,6 +3,7 @@
 
 Usage:
   icu.py push-week athlete/weeks/2026-W44.md [--from YYYY-MM-DD] [--dry-run]
+  icu.py check-bank              run the mechanical checks on every Core and Personal Bank file
   icu.py clear-week 2026-W44
   icu.py events  YYYY-MM-DD YYYY-MM-DD
   icu.py rides   YYYY-MM-DD YYYY-MM-DD
@@ -11,7 +12,8 @@ Usage:
   icu.py test-ride YYYY-MM-DD    push a short Setup test ride; prints its event ID
   icu.py delete-event EVENT_ID
 
-Week Record format: docs/week-records.md. Workout Bank: bank/README.md.
+Week Record format: docs/week-records.md. Workout Bank: bank/README.md, plus the
+athlete's Personal Workouts and Exercises in athlete/bank/ (or $ATHLETE_DIR/bank/).
 push-week checks the plan against the Athlete Profile (docs/athlete-profile.md),
 read from athlete/profile.md, or $ATHLETE_DIR/profile.md when that is set.
 Credentials: INTERVALS_ATHLETE_ID and INTERVALS_KEYCHAIN_SERVICE in .env, API
@@ -41,6 +43,15 @@ ROUNDS = {"light": 2, "normal": 3, "push": 4}  # composed strength, by Week Leve
 STRENGTH_BLOCK = (3, 8)          # Exercises in a Workout cell's composed block
 ADD_ON_BLOCK = (2, 4)            # Exercises in an Add-on
 PACES = ("easy_run_pace", "threshold_run_pace")  # profile fields run Workouts write as {field}
+# Bank frontmatter: the fields and values the mechanical checks know (bank/README.md).
+WORKOUT_FIELDS = ("id", "name", "kind", "sport", "duration_min", "equipment", "delivery")
+EXERCISE_FIELDS = ("id", "name", "pattern", "equipment")
+KINDS = {"quality", "endurance", "pt", "recovery", "test"}
+SPORTS = {"ride", "run", "swim", "walk", "strength", "pt"}
+DELIVERIES = {"workout", "note"}
+PATTERNS = {"squat", "hinge", "push", "pull", "carry", "core", "mobility"}
+EQUIPMENT_TAGS = {"bodyweight", "bands", "band-anchor", "kettlebell", "dumbbells", "barbell",
+                  "bench", "cable", "pull-up-bar", "gym", "smart-trainer", "pool", "hr-strap"}
 
 
 class PlanError(Exception):
@@ -48,6 +59,10 @@ class PlanError(Exception):
 
 
 class ProfileError(PlanError):
+    pass
+
+
+class BankError(PlanError):
     pass
 
 
@@ -185,25 +200,79 @@ def load_exercise(fm, body):
             "cue": " ".join(cue.split()), "prose": body.strip()}
 
 
-def load_bank(bank_dir=None):
-    """Workouts and Exercises, keyed by ID in one namespace."""
-    bank, where = {}, {}
-    bank_dir = Path(bank_dir or ROOT / "bank")
-    for p in sorted(bank_dir.rglob("*.md")):
-        if p.name == "README.md":
+def bank_files(bank_dir, personal_dir):
+    """Every Bank file with its origin: the Core Bank, then the athlete's Personal part."""
+    for origin, d in (("core", bank_dir), ("personal", personal_dir)):
+        for p in sorted(Path(d).rglob("*.md")):
+            if p.name != "README.md":
+                yield origin, p
+
+
+def label(origin):
+    return "Core" if origin == "core" else "Personal"
+
+
+def file_problems(fm, body, exercise):
+    """The mechanical checks on one Bank file's frontmatter (ADR 0005)."""
+    required = EXERCISE_FIELDS if exercise else WORKOUT_FIELDS
+    problems = [f"missing {f}" for f in required if f not in fm]
+    if exercise and ("reps" in fm) == ("hold" in fm):
+        problems.append("needs exactly one of reps or hold")
+    for field, known in (("kind", KINDS), ("sport", SPORTS), ("delivery", DELIVERIES),
+                         ("pattern", PATTERNS)):
+        if field in fm and fm[field] not in known:
+            problems.append(f"unknown {field} {fm[field]!r} (known: {', '.join(sorted(known))})")
+    tags = fm.get("equipment")
+    if "equipment" in fm and not isinstance(tags, list):
+        problems.append("equipment must be a list of tags, [] for none")
+    elif tags:
+        problems += [f"unknown equipment tag {t!r}" for t in tags if t not in EQUIPMENT_TAGS]
+    if fm.get("delivery") == "workout" and "```intervals\n" not in body:
+        problems.append("delivery: workout needs an ```intervals block")
+    if fm.get("kind") == "quality":
+        problems += [f"a quality Workout needs {f}" for f in ("ladder", "step") if f not in fm]
+    return problems
+
+
+def load_bank(bank_dir=None, personal_dir=None):
+    """Workouts and Exercises, Core and Personal (ADR 0005), keyed by ID in one namespace.
+
+    Every file must pass the mechanical checks: any failure is fatal, naming the file."""
+    bank, where, problems = {}, {}, []
+    bank_dir = bank_dir or ROOT / "bank"
+    personal_dir = personal_dir or athlete_dir() / "bank"
+    for origin, p in bank_files(bank_dir, personal_dir):
+        here = f"{label(origin)} {p}"
+        try:
+            fm, body = split_frontmatter(p.read_text())
+        except PlanError as e:
+            problems.append(f"{here}: {e}")
             continue
-        fm, body = split_frontmatter(p.read_text())
+        exercise = p.parent.name == "exercises"
+        found = file_problems(fm, body, exercise)
+        if "id" in fm and fm["id"] != p.stem:
+            found.append(f"id {fm['id']} doesn't match the file name {p.name}")
+        problems += [f"{here}: {x}" for x in found]
+        if found:
+            continue
         if fm["id"] in bank:
-            raise PlanError(f"duplicate Bank ID {fm['id']}: {where[fm['id']]} and {p}")
-        where[fm["id"]] = p
-        if p.parent.name == "exercises":
-            bank[fm["id"]] = load_exercise(fm, body)
+            problems.append(f"duplicate Bank ID {fm['id']}: {where[fm['id']]} and {here}")
+            continue
+        where[fm["id"]] = here
+        if exercise:
+            bank[fm["id"]] = {**load_exercise(fm, body), "origin": origin}
             continue
         block = re.search(r"```intervals\n(.*?)\n```", body, re.S)
         prose = re.sub(r"```intervals\n.*?\n```", "", body, flags=re.S)
         prose = re.sub(r"^# .*\n", "", prose.strip())
         prose = re.sub(r"\n?Alternative: swap this for .*", "", prose).strip()
-        bank[fm["id"]] = {**fm, "workout_text": block.group(1) if block else None, "prose": prose}
+        bank[fm["id"]] = {**fm, "workout_text": block.group(1) if block else None,
+                          "prose": prose, "origin": origin}
+    for wid, w in bank.items():
+        problems += [f"{where[wid]}: alternative {a} is not in the Bank"
+                     for a in alternatives_of(w) if a not in bank]
+    if problems:
+        raise BankError("\n  ".join(problems))
     return bank
 
 
@@ -522,6 +591,13 @@ def cmd_push_week(path, from_date=None, dry_run=False):
         print("push errors:\n  " + "\n  ".join(map(str, errs)))
 
 
+def cmd_check_bank():
+    bank = load_bank()
+    mine = sorted(i for i, w in bank.items() if w["origin"] == "personal")
+    print(f"Workout Bank OK: {len(bank) - len(mine)} Core, {len(mine)} Personal"
+          + (f" ({', '.join(mine)})" if mine else ""))
+
+
 def cmd_clear_week(week):
     y, w = week.split("-W")
     monday = dt.date.fromisocalendar(int(y), int(w), 1)
@@ -593,6 +669,7 @@ def main(argv):
     args = [a for a in args if a not in flags]
     commands = {
         "push-week": lambda path: cmd_push_week(path, from_date, "--dry-run" in flags),
+        "check-bank": cmd_check_bank,
         "clear-week": cmd_clear_week,
         "events": cmd_events,
         "rides": cmd_rides,
@@ -611,6 +688,8 @@ def main(argv):
         commands[cmd](*args)
     except ProfileError as e:
         sys.exit(f"Athlete Profile problem: {e}")
+    except BankError as e:
+        sys.exit(f"Workout Bank problem: {e}")
     except PlanError as e:
         sys.exit(f"Week Record problem: {e}")
 
