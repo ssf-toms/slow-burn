@@ -701,6 +701,20 @@ Progress: add a plate once all rounds feel smooth at 12 reps.
 """
 
 
+COPENHAGEN_PLANK = """---
+id: copenhagen-plank
+name: "Copenhagen plank (knee on a bench)"
+pattern: core
+equipment: [bodyweight]
+hold: "20 s/side"
+---
+
+Side plank with the top knee on a sofa seat or bench and the bottom leg free underneath.
+
+Progress: longer holds (up to 30 s), then with the top ankle on the bench.
+"""
+
+
 PT_ROUTINE = """---
 id: pt
 name: PT routine
@@ -726,7 +740,36 @@ def personal(test, files, profile=INDOOR_PROFILE):
     return d
 
 
+OUTDOOR_FTP_TEST = """---
+id: ftp-20-outdoor
+name: "FTP test: 20 min outdoor"
+kind: test
+sport: ride
+duration_min: 55
+equipment: []
+delivery: note
+---
+
+# FTP test: 20 min outdoor
+
+20 min as hard as you can hold evenly. Your new FTP is 95% of the average power.
+"""
+
+
 class PersonalBank(unittest.TestCase):
+    def test_the_triathlete_plans_a_personal_outdoor_ftp_test(self):
+        personal(self, {"workouts/ftp-20-outdoor.md": OUTDOOR_FTP_TEST,
+                        "exercises/copenhagen-plank.md": COPENHAGEN_PLANK},
+                 example_profile("profile.md"))
+        alone = week(self, {"Tue": ("Test", "ftp-20-outdoor"),
+                            "Wed": ("Endurance", "end-ride-60", "copenhagen-plank, reverse-lunge")})
+        self.assertIn("2026-11-03  NOTE    FTP test: 20 min outdoor", dry_run(alone))
+        with_spin = week(self, {"Tue": ("Test", "ftp-20-outdoor, test-spin", "copenhagen-plank, side-plank")})
+        events, problems = build(with_spin)
+        self.assertEqual(problems, [])
+        self.assertFalse(event(events, "Tue")["indoor"])
+        self.assertIn("Copenhagen plank", event(events, "Tue-addon")["description"])
+
     def test_a_personal_workout_is_planned_and_pushed(self):
         personal(self, {"workouts/hill-walk.md": HILL_WALK})
         self.assertEqual(icu.load_bank()["hill-walk"]["origin"], "personal")
