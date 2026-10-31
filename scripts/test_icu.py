@@ -1,4 +1,5 @@
-"""Tests for icu.py. Run with: python3 -m unittest discover -s scripts"""
+"""Tests for icu.py. Run with: python3 -m unittest discover -s scripts
+(on Windows: py -m unittest discover -s scripts)"""
 import contextlib
 import io
 import os

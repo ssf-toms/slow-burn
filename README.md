@@ -25,10 +25,12 @@ The vocabulary is defined in [`GLOSSARY.md`](GLOSSARY.md), the rules in [`docs/p
 
 ## Setup
 
-Requirements: macOS, Python 3, Claude Code, and a free intervals.icu account (Setup helps you make one). macOS is needed because the intervals.icu API key is kept in the Keychain; that is the one remaining macOS dependency.
+Requirements: a Mac or PC (macOS, Windows or Linux), Python 3, Claude Code, and a free intervals.icu account (Setup helps you make one). On Windows, install Git for Windows too (Claude Code and the Desktop app use it). Windows and Linux are supported as best effort: tested on macOS only so far.
+
+Slow Burn needs a computer that keeps your files; it doesn't run from the phone or claude.ai alone.
 
 1. Clone this repo.
-2. Open Claude Code in the repo and run `/setup`. It asks about your sports, Equipment and week, shows you the Week Templates it generates, then walks you through intervals.icu, the calendar feed and a test ride. You store the API key in the Keychain yourself; it never goes in the chat.
+2. Open the repo in Claude Code, in the terminal or in the Claude Desktop app's Code tab (a Local session), and run `/setup`. It asks about your sports, Equipment and week, shows you the Week Templates it generates, then walks you through intervals.icu, the calendar feed and a test ride. You paste the API key into a local file yourself; it never goes in the chat.
 3. Push `athlete/` to a **private** remote if you want a backup.
 4. Run `/checkin` to plan your first week.
 
@@ -41,6 +43,8 @@ Run `/setup` again whenever your sports, Equipment or availability change.
 - **Whenever you want something the Bank lacks:** `/add-workout`. Describe it or paste your own routine; it's checked against the Bank's principles and saved to `athlete/bank/`.
 
 Runs, swims, strength, mobility and walks aren't synced: you report them at the Check-in ([ADR 0002](docs/adr/0002-runs-reported-not-synced.md)).
+
+On the go? Run `/remote-control` in a Slow Burn session on your computer and carry on from the Claude app. The computer has to stay on.
 
 ## License
 
