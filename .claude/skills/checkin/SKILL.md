@@ -62,7 +62,7 @@ The client is `scripts/icu.py`. Run it from the repo root.
 6. Iterate until the user approves.
 
 **Done when** the user has approved a plan where every slot holds a Bank Workout or `other:<id>` from the profile, allowed at this Level, or is a gap the user has decided on; and every rule holds:
-- **Equipment:** every Workout's and Exercise's `equipment` tags are in the profile's `equipment`;
+- **Equipment:** every Workout's and Exercise's `equipment` tags are at the day's Place (its ` @<place>`, copied from the template cell into the Session cell, or the default Place);
 - **Pairings:** a row combines Workouts only if the pair is in `pairings`, and nothing is paired with a Quality Session;
 - **Ladders** (if any Primary sport has Ladders): steps match the Next block, and each Quality slot is on the Ladder the pairing rule gives it;
 - no Endurance Workout appears twice in the week;

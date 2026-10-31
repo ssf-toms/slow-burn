@@ -20,7 +20,7 @@ Ride targets are **%FTP** with simple steps and repeats, and no ramps or cadence
 | `kind` | `quality` \| `endurance` \| `pt` \| `recovery` \| `test` | What the Workout is for. |
 | `sport` | `ride` \| `run` \| `swim` \| `walk` \| `strength` \| `pt` | The activity. |
 | `duration_min` | number | Typical length in minutes. |
-| `equipment` | list of tags, `[]` for none | The Equipment the Workout needs, from the tags in `docs/athlete-profile.md` (`bodyweight`, `bands`, `band-anchor`, `kettlebell`, `dumbbells`, `barbell`, `bench`, `cable`, `pull-up-bar`, `gym`, `smart-trainer`, `pool`, `hr-strap`). It can only be planned if the athlete has every tag. The one exception: `smart-trainer` on a `delivery: workout` ride only decides whether it's pushed as indoor or outdoor, so the ride can be planned without one. Required in every file. |
+| `equipment` | list of tags, `[]` for none | The Equipment the Workout needs, from the tags in `docs/athlete-profile.md` (`bodyweight`, `bands`, `band-anchor`, `kettlebell`, `dumbbells`, `barbell`, `bench`, `cable`, `pull-up-bar`, `machines`, `smart-trainer`, `pool`, `hr-strap`). It can only be planned on a day whose Place has every tag. The one exception: `smart-trainer` on a `delivery: workout` ride only decides whether it's pushed as indoor or outdoor, so the ride can be planned without one. Required in every file. |
 | `delivery` | `workout` \| `note` | `workout` is pushed as a structured workout (rides). `note` is a calendar note. |
 | `ladder`, `step` | Ladder name, number | Quality Workouts only: which Ladder, and which step on it. |
 | `variant_group` | string | Workouts that rotate with each other (Endurance rides, runs). |
@@ -45,7 +45,7 @@ A single strength or mobility movement (ADR 0004). Strength Sessions and Strengt
 | `id` | lowercase, dashes | The name used in Week Records. Same as the file name. |
 | `name` | string | How the move is listed in the pushed note. |
 | `pattern` | `squat` \| `hinge` \| `push` \| `pull` \| `carry` \| `core` \| `mobility` | The movement pattern, for balancing the week (picking rule 6). |
-| `equipment` | list of tags | As for Workouts: every tag must be in the profile's `equipment`. Band moves that need a door or post to pull against also carry `band-anchor`. |
+| `equipment` | list of tags | As for Workouts: every tag must be at the day's Place. Band moves that need a door or post to pull against also carry `band-anchor`. |
 | `reps` or `hold` | string, e.g. `"10"`, `"8/side"`, `"30 s"` | The amount per round. Exactly one of the two. |
 
 The body is one or two cue lines, then a `Progress:` line. The cue is pushed next to the move. The Progress line is for the athlete and the Check-in, and isn't pushed.
@@ -117,7 +117,7 @@ Pushed as notes. Each has a 15′ easy warm-up with strides and a 10′ easy coo
 
 ### Endurance
 
-Alternatives are listed in order of preference: the first one the profile can use is offered (a tiered sport, and the Equipment it needs).
+Alternatives are listed in order of preference: the first one the profile can use is offered (a tiered sport, and the Equipment it needs at any one Place: an Alternative is a swap on the day).
 
 | Ride | Min | Alternatives | Levels |
 |------|-----|--------------|--------|
@@ -159,7 +159,7 @@ Swims need a `pool` and are pushed as notes. Each is a warm-up, drills, a main s
 
 ### Exercises
 
-By pattern and Equipment set. `*` marks a band move that also needs `band-anchor`. Gym moves list their tags (`barbell`, `bench`, `cable`, `pull-up-bar`); a gym usually has dumbbells and kettlebells too, so their carries serve there. `mobility` Exercises come later.
+By pattern and Equipment set. `*` marks a band move that also needs `band-anchor`. Gym moves list their tags (`barbell`, `bench`, `cable`, `pull-up-bar`); a gym Place usually lists dumbbells and kettlebells too, so their carries serve there. `mobility` Exercises come later.
 
 | Pattern | Bodyweight | Bands | Kettlebell | Dumbbells | Gym |
 |---|---|---|---|---|---|
@@ -218,7 +218,7 @@ Thin spots: a bodyweight-only profile has one carry (`bear-crawl`), and bands al
 
    If `alternatives: on`, every Endurance Session names an Alternative of similar effort in another tiered sport, which you can swap in on the day. `push-week` offers the first Alternative on the Workout's list that the profile can use. Where the Week Template names one (`ride (alt: swim)`), pick a Workout whose first usable Alternative is that sport: the 50′ rides offer a swim first, the other rides and the runs offer a run or ride first and a swim after it.
 5. **Endurance variety:** never the same Workout twice in one week. Prefer a different Workout from the one on the same day last week.
-6. **Strength:** only if strength is tiered. Compose each Strength Session and Add-on from the Exercises whose Equipment the profile has:
+6. **Strength:** only if strength is tiered. Compose each Strength Session and Add-on from the Exercises whose Equipment the day's Place has:
    - **Size:** a Strength Session has 5–6 Exercises, an Add-on 2–3. (`push-week` accepts 3–8 and 2–4.) No Exercise twice in one row.
    - **Balance:** all the strength in the week, Sessions and Add-ons together, covers squat, hinge, push, pull, carry and core. A lone Strength Session in a week is full-body, covering all six itself.
    - **Variety:** prefer Exercises not used last week (read last week's Plan rows), and vary between Sessions in the same week.

@@ -8,7 +8,7 @@ description: Add a Personal Workout or Exercise. Draft one from what the athlete
 Speak in the terms from `GLOSSARY.md`. Read these before step 1:
 
 - `bank/README.md`: the frontmatter of Workouts and Exercises, the mechanical checks, and the **Principles checklist**
-- `athlete/profile.md`: the Tiers, Equipment, Notes (injuries, gaps) and Week Templates. If it's missing, stop and tell the user to run `/setup`.
+- `athlete/profile.md`: the Tiers, Places and their Equipment, Notes (injuries, gaps) and Week Templates. If it's missing, stop and tell the user to run `/setup`.
 - `docs/adr/0005-personal-workouts-layer.md`: why Personal files exist and what they may close
 
 The Workout Bank is the Core Bank (`bank/`) plus the athlete's Personal files (`athlete/bank/exercises/` and `athlete/bank/workouts/`). Ask the user's decisions with the AskUserQuestion tool, recommended option first. The client is `scripts/icu.py`. Run it from the repo root.
@@ -28,7 +28,7 @@ The Workout Bank is the Core Bank (`bank/`) plus the athlete's Personal files (`
 
 1. Write each file in the format of `bank/README.md`, modelled on the Core file nearest to it (`bank/exercises/` for an Exercise, the same `kind` and `sport` for a Workout). The `id` is lowercase with dashes, is the file name, and is unique across Core and Personal.
 2. Turn pasted content into the format faithfully: keep their movements, amounts and cues, and add only what the format needs (a pattern, a cue line, a `Progress:` line, `equipment` tags).
-3. Pick `equipment` tags from the known ones in `docs/athlete-profile.md` (the `equipment` field), naming exactly what the thing needs. A tag outside that list fails `check-bank`.
+3. Pick `equipment` tags from the known ones in `docs/athlete-profile.md` (the `places` field), naming exactly what the thing needs. A tag outside that list fails `check-bank`.
 
 **Done when** every item has a full draft file: frontmatter and body.
 

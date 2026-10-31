@@ -12,20 +12,20 @@ Apply these rules in order:
 2. **Quality slots:** Normal and Push get two Quality Sessions, Light at most one. They go only to Primary sports that have Ladders (`ride` and `run`). With one such sport, it gets both slots. With two, one each, and Light's one slot alternates between them, Light week to Light week. With three, the slots rotate week to week. With none, there are no Quality Sessions and the training days are Endurance, Strength or `Other`.
 3. **Tier counts:** each Primary activity is on at least 2 training days a week, each Secondary on 1–2, and each Occasional on at most 1, or only as an Alternative. A Strength Add-on counts as a strength day. For the Recovery activities (PT and walk), a Primary or Secondary Tier is met on Recovery Days as well as training days: PT on a Recovery Day counts toward its 2 or 1–2 days. If the training days can't hold every Primary at 2 and every Secondary at 1 (as in a short Light week), the Primaries keep their days and a Secondary that doesn't fit becomes a named Alternative. Judgement fills the remaining days, and the athlete approves the result.
 4. **Spacing:** Quality Sessions are never on consecutive days. Strength has no spacing rules of its own.
-5. **Fixed days:** the days in `availability.fixed` are placed first, before any other rule fills the week.
+5. **Fixed days:** the days in `availability.fixed` are placed first, before any other rule fills the week, each at its `@<place>` if it names one (`Wed: strength @gym` becomes `Strength: strength @gym` on Wednesday at every Level). Then mark ` @<place>` on any other day that needs Equipment only a non-default Place has (a swim at the gym's pool). Days at the default Place carry no mark.
 6. **Dose:** the template sets the Session kind, and the Level sets each Workout's Dose. The Endurance ride length is the first case of this: a range for each Level (50–60′ in Light, 60–75′ in Normal with at most one 75′ ride, 60–75′ in Push with at least one), plus an optional Extension of one Push Quality ride (picking rule 4 in `bank/README.md`).
 7. **Conditional parts:**
    - The FTP test is planned only if ride is Primary, and the run test only if run is Primary.
    - Setup asks for `experience` only if ride or run is Primary, and for `threshold_run_pace` only if run is Primary.
    - Load Warning rules 3 and 4 apply only if ride is Primary or Secondary (not Occasional). Otherwise use rules 1 and 2 plus judgement.
    - Setup asks for FTP and heart rate only if ride is tiered.
-   - The MyWhoosh steps apply only if `equipment` includes `smart-trainer`.
+   - The MyWhoosh steps apply only if a Place has `smart-trainer`.
 
 The same rules hold for every template:
 - **One Session a day.** A Strength Add-on is the only thing that can follow it, and only after an Endurance Session or a Test Session's easy spin. It needs `strength` tiered.
 - **Pairings:** a Session combines Workouts (such as PT then strength) only if the pair is in `pairings`. Nothing is ever paired with a Quality Session.
 - **Alternatives:** if `alternatives: on`, every Endurance Session names an Alternative in another tiered sport, so you can swap on the day.
-- **Equipment:** a Workout can be planned only if every tag it needs is in `equipment` (the one exception, `smart-trainer` on a structured ride, is in `docs/athlete-profile.md`). A slot the Bank can't fill is listed as a gap in the profile's Notes, and closed only by a checked Personal Workout or Exercise (`/add-workout`).
+- **Equipment:** a Workout or Exercise can be planned only if every tag it needs is at the day's Place: its `@<place>`, or the default Place, the first in `places` (the one exception, `smart-trainer` on a structured ride, is in `docs/athlete-profile.md`). A ride is pushed as indoor only if the day's Place has a smart trainer. A slot the Bank can't fill is listed as a gap in the profile's Notes, and closed only by a checked Personal Workout or Exercise (`/add-workout`).
 - **Real life wins.** If the user names a one-off constraint (a busy day, travel), move Sessions around it within the Adjustment rules below rather than forcing the template. A lasting change means re-running Setup.
 
 ### Worked example
