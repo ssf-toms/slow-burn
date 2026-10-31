@@ -178,6 +178,28 @@ def load_profile():
     return split_frontmatter(path.read_text())[0]
 
 
+def places(profile):
+    """The profile's Places in order, each a set of Equipment tags. The first is the default."""
+    if "places" not in profile:
+        if "equipment" in profile:
+            raise ProfileError("`equipment` is now `places`: write it as `places:` with "
+                               "`home: [..]` under it (docs/athlete-profile.md)")
+        raise ProfileError("no `places` in the Athlete Profile: run /setup")
+    out = {name: set(tags or []) for name, tags in (profile["places"] or {}).items()}
+    if not out:
+        raise ProfileError("`places` needs at least one Place")
+    return out
+
+
+def day_place(d, profile):
+    """A Plan row's Place name and Equipment: its `@<place>`, else the default Place."""
+    known = places(profile)
+    name = d.get("place") or next(iter(known))
+    if name not in known:
+        raise PlanError(f"{d['day']}: unknown Place '@{name}' (profile places: {', '.join(known)})")
+    return name, known[name]
+
+
 def load_exercise(fm, body):
     """An Exercise (bank/exercises/, ADR 0004): pushed only inside a composed note."""
     cue = re.sub(r"\n?Progress:.*", "", body.strip(), flags=re.S).strip()
@@ -225,6 +247,8 @@ def parse_week(path):
         if len(cells) != 6:
             raise PlanError(f"expected 6 columns: {line}")
         day, date_s, session, workouts, addon, _done = cells
+        session, _, place = session.partition("@")
+        session, place = session.strip(), place.strip() or None
         date = start + dt.timedelta(days=DAYS.index(day))
         if date_s and date_s != date.strftime("%m-%d"):
             raise PlanError(f"{day}: Date {date_s} should be {date:%m-%d}")
@@ -236,7 +260,7 @@ def parse_week(path):
                     raise PlanError(f"{day}: more than one Extension")
                 token, extend = m.group(1), (m.group(1), int(m.group(2)))
             ids.append(token)
-        days.append(dict(day=day, date=date, session=session, workouts=ids,
+        days.append(dict(day=day, date=date, session=session, place=place, workouts=ids,
                          addon=split_top(addon), extend=extend))
     if [d["day"] for d in days] != DAYS:
         raise PlanError("Plan must list Mon..Sun once each, in order")
@@ -331,7 +355,7 @@ def pairing_problem(session, workouts, pairings):
 
 def plan_problems(d, bank, level, profile):
     """What's wrong with one Plan row. `bank` includes the profile's other activities."""
-    equipment = set(profile.get("equipment") or [])
+    place, equipment = day_place(d, profile)
     problems = []
     if d["session"] not in SESSION_KINDS:
         problems.append(f"unknown Session '{d['session']}'")
@@ -352,7 +376,7 @@ def plan_problems(d, bank, level, profile):
     for w in [bank[i] for i in ids]:
         lacking = [t for t in needed_equipment(w) if t not in equipment]
         if lacking:
-            problems.append(f"{w['id']} needs {', '.join(lacking)} (not in the profile's equipment)")
+            problems.append(f"{w['id']} needs {', '.join(lacking)} (not at {place})")
         for pace in PACES:
             if "{" + pace + "}" in w["prose"] and not profile.get(pace):
                 problems.append(f"{w['id']} needs {pace} in the profile")
@@ -414,10 +438,9 @@ def extended(workout_text, minutes):
 def build_events(fm, days, bank, profile):
     week, level = fm["week"], fm["level"]
     bank = {**bank, **other_workouts(profile)}
-    equipment = set(profile.get("equipment") or [])
     tiered = set(profile.get("tiers") or {})
-    indoor = SMART_TRAINER in equipment
     alternatives = profile.get("alternatives") == "on"
+    kits = places(profile).values()
 
     def description(w):
         out = w["prose"]
@@ -427,8 +450,9 @@ def build_events(fm, days, bank, profile):
         return out + (f"\n\nToday: {dose}" if dose else "")
 
     def offered(alt):
+        """An Alternative is a swap on the day, so it may be at any one of the Places."""
         return (alternatives and alt is not None and alt["sport"] in tiered
-                and all(t in equipment for t in needed_equipment(alt)))
+                and any(all(t in kit for t in needed_equipment(alt)) for kit in kits))
 
     def alternative_line(w):
         """The first of the Workout's Alternatives the profile can use, if any."""
@@ -445,6 +469,11 @@ def build_events(fm, days, bank, profile):
     for d in days:
         if not d["session"] and not d["workouts"] and not d["addon"]:
             continue  # unplanned day in a partial week
+        try:
+            _place, equipment = day_place(d, profile)
+        except PlanError as e:  # an unknown @place
+            problems.append(str(e))
+            continue
         problems += [f"{d['day']}: {p}" for p in plan_problems(d, bank, level, profile)]
         if any(w not in bank for w in row_ids(d)):
             continue
@@ -464,8 +493,8 @@ def build_events(fm, days, bank, profile):
                 desc += f"\n\nToday: +{minutes} min at Endurance ({EXTENSION_PCT}%) before the cooldown."
             desc += alternative_line(ride)
             desc += "\n\n" + text
-            events.append(dict(category="WORKOUT", type="Ride", indoor=indoor, name=name,
-                               description=desc, start_date_local=f"{d['date']}T00:00:00",
+            events.append(dict(category="WORKOUT", type="Ride", name=name,
+                               indoor=SMART_TRAINER in equipment, description=desc, start_date_local=f"{d['date']}T00:00:00",
                                external_id=ext(week, d["day"])))
         elif workouts:
             events.append(note_event(*combined(workouts), d["date"], ext(week, d["day"])))
