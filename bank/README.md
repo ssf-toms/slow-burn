@@ -59,7 +59,10 @@ Runs (easy pace, 5:45–6:00/km in the run files; change it to your own):
 
 ## Picking rules (used by the Check-in)
 
-1. **Quality pairing:** Tuesday alternates week to week between the **Threshold** and **VO2max** Ladders. Thursday is always **Sweet Spot**. In a Light week, Tuesday is either Endurance or one Sweet Spot Workout a step *below* your current step.
+1. **Quality pairing:** applies to each Primary sport that has Ladders (today, only ride), using the Quality slots the Week Template gives it (generation rule 2 in `docs/planning-rules.md`):
+   - **Two slots** (the only such sport): the first Quality day of the week alternates week to week between the **Threshold** and **VO2max** Ladders. The second is always **Sweet Spot**. In the maintainer's template that's Tuesday and Thursday.
+   - **One slot** (two or three such sports): the slot rotates week to week, Sweet Spot → Threshold → VO2max.
+   - **Light week:** the one Quality slot is either Endurance or one Sweet Spot Workout a step *below* your current step.
 2. **Climbing:**
    - Completed at an effort of 7/10 or below: next step.
    - 8/10, or one rep cut short: repeat the same step.
@@ -67,14 +70,14 @@ Runs (easy pace, 5:45–6:00/km in the run files; change it to your own):
    - After a Light week: stay on the same step.
    - After an FTP retest: drop one step on every Ladder, because the targets just got harder.
    - Top step completed at 7/10 or below: hold there and bring the next FTP test forward.
-3. **Starting steps:** ss-2, th-2 and vo2-2. You've been riding structured workouts, so step 1 is skipped. If step 2 feels too hard, drop to step 1 using rule 2.
-4. **Endurance length by Level:**
+3. **Starting steps:** set by `experience`, on every Ladder of each Primary sport that has Ladders: `new` starts at step 1, `some` at step 2 (ss-2, th-2, vo2-2), and `experienced` at step 3. If the starting step feels too hard, drop a step using rule 2.
+4. **Dose by Level:** the Level picks each Workout's Dose. Endurance ride length is the first case of Dose:
    - Light: 50′ rides.
    - Normal: 60′.
-   - Push: 60′, plus 75′ on Saturday.
+   - Push: 60′, plus one 75′ ride (the template's long day, Saturday for the maintainer).
 
-   Every Endurance ride names a run alternative of similar effort, which you can swap in on the day.
+   If `alternatives: on`, every Endurance Session names an Alternative of similar effort in another tiered sport, which you can swap in on the day.
 5. **Endurance variety:** never the same Workout twice in one week. Prefer a different Workout from the one on the same day last week.
-6. **Strength:** Monday cycles A → B → C. The Wednesday Add-on cycles core → upper → posterior.
-7. **FTP test:** when due (about 6 weeks since the last test, and the previous week was Light), it replaces Tuesday's Quality Session. A Test row is `ftp-ramp-test, test-spin`, optionally with an Add-on, and comes to about 60–75′.
-8. **Walk:** for Light-week Sundays, or as a stand-in on the day for any Session when you're too tired. Never a recovery ride.
+6. **Strength:** only if strength is tiered. Strength Sessions cycle A → B → C, and Add-ons cycle core → upper → posterior, each continuing from last week.
+7. **FTP test:** only if ride is Primary. When due (about 6 weeks since the last test, and the previous week was Light), it replaces the week's first ride Quality Session. A Test row is `ftp-ramp-test, test-spin`, optionally with an Add-on, and comes to about 60–75′.
+8. **Walk:** for Recovery Days the template gives a walk, or as a stand-in on the day for any Session when you're too tired. Never a recovery ride.
