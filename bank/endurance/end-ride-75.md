@@ -5,8 +5,9 @@ kind: endurance
 sport: ride
 duration_min: 75
 variant_group: endurance-ride
-levels: [push]
-run_alternative: run-easy-10-12
+levels: [normal, push]
+alternative: [run-easy-8-10, swim-steady-2500]
+equipment: [smart-trainer]
 delivery: workout
 ---
 
@@ -24,6 +25,6 @@ Cooldown
 - 5m 50%
 ```
 
-The longest ride in the Bank, for Push weeks only. Stand up for 30 seconds every 10–15 minutes for comfort.
+The longest ride in the Bank, for Normal and Push weeks. In a Normal week it's the one long ride. Stand up for 30 seconds every 10–15 minutes for comfort.
 
-On a good-weather day, swap this for [run-easy-10-12](../endurance/run-easy-10-12.md).
+Alternative: swap this for [run-easy-8-10](../endurance/run-easy-8-10.md) or [swim-steady-2500](../endurance/swim-steady-2500.md) on the day.

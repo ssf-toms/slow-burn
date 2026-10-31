@@ -6,6 +6,7 @@ sport: ride
 duration_min: 53
 ladder: threshold
 step: 1
+equipment: [smart-trainer]
 delivery: workout
 ---
 

@@ -5,7 +5,8 @@ kind: endurance
 sport: ride
 duration_min: 60
 variant_group: endurance-ride
-run_alternative: run-easy-8-10
+alternative: [run-easy-8-10, swim-steady-2000]
+equipment: [smart-trainer]
 delivery: workout
 ---
 
@@ -25,4 +26,4 @@ Cooldown
 
 Steady Zone 2. Good one for a podcast or a show.
 
-On a good-weather day, swap this for [run-easy-8-10](../endurance/run-easy-8-10.md).
+Alternative: swap this for [run-easy-8-10](../endurance/run-easy-8-10.md) or [swim-steady-2000](../endurance/swim-steady-2000.md) on the day.

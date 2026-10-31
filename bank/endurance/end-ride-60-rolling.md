@@ -5,7 +5,8 @@ kind: endurance
 sport: ride
 duration_min: 60
 variant_group: endurance-ride
-run_alternative: run-easy-8-10
+alternative: [run-easy-8-10, swim-steady-2000]
+equipment: [smart-trainer]
 delivery: workout
 ---
 
@@ -26,4 +27,4 @@ Cooldown
 
 Gentle swells inside Zone 2, as if on rolling roads. The 74% parts should still feel easy.
 
-On a good-weather day, swap this for [run-easy-8-10](../endurance/run-easy-8-10.md).
+Alternative: swap this for [run-easy-8-10](../endurance/run-easy-8-10.md) or [swim-steady-2000](../endurance/swim-steady-2000.md) on the day.

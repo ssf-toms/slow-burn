@@ -4,6 +4,7 @@ name: "FTP test: MyWhoosh Ramp Test"
 kind: test
 sport: ride
 duration_min: 37
+equipment: [smart-trainer]
 delivery: note
 ---
 

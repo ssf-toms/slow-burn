@@ -4,6 +4,7 @@ name: Walk
 kind: recovery
 sport: walk
 duration_min: 40
+equipment: []
 delivery: note
 ---
 

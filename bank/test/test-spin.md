@@ -4,6 +4,7 @@ name: "After the test: easy spin"
 kind: test
 sport: ride
 duration_min: 20
+equipment: [smart-trainer]
 delivery: workout
 ---
 

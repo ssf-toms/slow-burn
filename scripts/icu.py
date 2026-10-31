@@ -2,19 +2,28 @@
 """intervals.icu client for slow-burn.
 
 Usage:
-  icu.py push-week weeks/2026-W44.md [--from YYYY-MM-DD] [--dry-run]
+  icu.py push-week athlete/weeks/2026-W44.md [--from YYYY-MM-DD] [--dry-run]
+  icu.py check-bank              run the mechanical checks on every Core and Personal Bank file
   icu.py clear-week 2026-W44
   icu.py events  YYYY-MM-DD YYYY-MM-DD
   icu.py rides   YYYY-MM-DD YYYY-MM-DD
   icu.py fitness YYYY-MM-DD YYYY-MM-DD
+  icu.py whoami                  name and ID the API key belongs to, checked against .env
+  icu.py test-ride YYYY-MM-DD    push a short Setup test ride; prints its event ID
+  icu.py delete-event EVENT_ID
 
-Week Record format: docs/week-records.md. Workout Bank: bank/README.md.
+Week Record format: docs/week-records.md. Workout Bank: bank/README.md, plus the
+athlete's Personal Workouts and Exercises in athlete/bank/ (or $ATHLETE_DIR/bank/).
+push-week checks the plan against the Athlete Profile (docs/athlete-profile.md),
+read from athlete/profile.md, or $ATHLETE_DIR/profile.md when that is set.
 Credentials: INTERVALS_ATHLETE_ID and INTERVALS_KEYCHAIN_SERVICE in .env, API
-key in the macOS Keychain (written by scripts/setup-intervals.sh).
+key in the macOS Keychain. The /setup skill sets all three up.
 """
 import base64
 import datetime as dt
+import inspect
 import json
+import os
 import re
 import subprocess
 import sys
@@ -25,17 +34,48 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 API = "https://intervals.icu/api/v1"
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-SESSION_KINDS = {"Recovery", "Quality", "Endurance", "Test"}
+SESSION_KINDS = {"Recovery", "Quality", "Endurance", "Test", "Strength", "Other"}
+OTHER = "other:"                # Workout cell prefix for the profile's `other` activities
+SMART_TRAINER = "smart-trainer"  # equipment tag
+EXTENSION_MIN = (10, 15)         # allowed Extension minutes, Push Quality rides only
+EXTENSION_PCT = 68               # Endurance (Zone 2) %FTP for Extension minutes
+ROUNDS = {"light": 2, "normal": 3, "push": 4}  # composed strength, by Week Level
+MOBILITY = "mobility"            # the mobility Exercise pattern, and the mobility sport
+MOBILITY_ROUNDS = 2              # a composed mobility block, at every Level
+STRENGTH_BLOCK = (3, 8)          # Exercises in a Workout cell's composed strength block
+MOBILITY_BLOCK = (6, 8)          # Exercises in a composed Mobility Session
+MOBILITY_TOP_UP = (2, 3)         # mobility Exercises after a whole mobility Workout
+ADD_ON_BLOCK = (2, 4)            # Exercises in an Add-on
+PACES = ("easy_run_pace", "threshold_run_pace")  # profile fields run Workouts write as {field}
+# Bank frontmatter: the fields and values the mechanical checks know (bank/README.md).
+WORKOUT_FIELDS = ("id", "name", "kind", "sport", "duration_min", "equipment", "delivery")
+EXERCISE_FIELDS = ("id", "name", "pattern", "equipment")
+KINDS = {"quality", "endurance", "mobility", "recovery", "test"}
+SPORTS = {"ride", "run", "swim", "walk", "strength", "mobility"}
+DELIVERIES = {"workout", "note"}
+PATTERNS = {"squat", "hinge", "push", "pull", "carry", "core", "mobility"}
+EQUIPMENT_TAGS = {"bodyweight", "bands", "band-anchor", "kettlebell", "dumbbells", "barbell",
+                  "bench", "cable", "pull-up-bar", "machines", "smart-trainer", "pool", "hr-strap"}
 
 
 class PlanError(Exception):
     pass
 
 
+class ProfileError(PlanError):
+    pass
+
+
+class BankError(PlanError):
+    pass
+
+
 # ── config and HTTP ──────────────────────────────────────────────────────
 def load_env():
-    env = {}
-    for line in (ROOT / ".env").read_text().splitlines():
+    env, path = {}, ROOT / ".env"
+    if not path.exists():  # dry runs and tests need no credentials
+        return env
+    for line in path.read_text().splitlines():
         if "=" in line and not line.lstrip().startswith("#"):
             k, v = line.split("=", 1)
             env[k.strip()] = v.strip().strip("'\"")
@@ -43,7 +83,7 @@ def load_env():
 
 
 ENV = load_env()
-ATHLETE = ENV["INTERVALS_ATHLETE_ID"]
+ATHLETE = ENV.get("INTERVALS_ATHLETE_ID")
 
 
 def api_key():
@@ -53,8 +93,10 @@ def api_key():
         check=True, capture_output=True, text=True).stdout.strip()
 
 
-def call(method, path, body=None, **query):
-    url = f"{API}/athlete/{ATHLETE}{path}"
+def call(method, path, body=None, athlete_id=None, /, **query):
+    """`path` is under /athlete/<id>; athlete_id "0" means whoever owns the key.
+    The first four are positional-only, so every keyword is a query param."""
+    url = f"{API}/athlete/{athlete_id or ATHLETE}{path}"
     if query:
         url += "?" + "&".join(f"{k}={v}" for k, v in query.items())
     data = json.dumps(body).encode() if body is not None else None
@@ -73,33 +115,203 @@ def call(method, path, body=None, **query):
 
 
 # ── Markdown parsing ─────────────────────────────────────────────────────
+def split_top(s):
+    """Split on commas outside quotes, brackets and braces."""
+    parts, depth, quoted, cur = [], 0, False, ""
+    for ch in s:
+        if ch == '"':
+            quoted = not quoted
+        elif not quoted and ch in "[{":
+            depth += 1
+        elif not quoted and ch in "]}":
+            depth -= 1
+        if ch == "," and depth == 0 and not quoted:
+            parts.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    parts.append(cur)
+    return [p.strip() for p in parts if p.strip()]
+
+
+def parse_value(v):
+    v = v.strip()
+    if v.startswith("[") and v.endswith("]"):
+        return [parse_value(x) for x in split_top(v[1:-1])]
+    if v.startswith("{") and v.endswith("}"):
+        return {k.strip(): parse_value(x) for k, _, x in
+                (item.partition(":") for item in split_top(v[1:-1]))}
+    if len(v) >= 2 and v[0] == v[-1] == '"':
+        return v[1:-1].replace('\\"', '"')
+    return v
+
+
+def parse_block(lines, i=0, indent=0):
+    """The YAML subset in docs/athlete-profile.md: maps nested by indentation,
+    `- item` lists, and inline [..] / {..} values. Scalars stay strings."""
+    out = {}
+    while i < len(lines):
+        line = lines[i]
+        if not line.strip() or line.lstrip().startswith("#"):
+            i += 1
+            continue
+        depth = len(line) - len(line.lstrip(" "))
+        if depth < indent:
+            break
+        key, _, v = line.strip().partition(":")
+        key = key.strip()
+        i += 1
+        if v.strip():
+            out[key] = parse_value(v)
+            continue
+        nxt = next((l for l in lines[i:] if l.strip()), "")
+        child = len(nxt) - len(nxt.lstrip(" "))
+        if child <= depth:
+            out[key] = ""
+        elif nxt.lstrip().startswith("- "):
+            items = []
+            while i < len(lines) and lines[i].lstrip().startswith("- "):
+                items.append(parse_value(lines[i].lstrip()[2:]))
+                i += 1
+            out[key] = items
+        else:
+            out[key], i = parse_block(lines, i, child)
+    return out, i
+
+
 def split_frontmatter(text):
     m = re.match(r"---\n(.*?)\n---\n(.*)", text, re.S)
     if not m:
         raise PlanError("missing frontmatter")
-    fm = {}
-    for line in m.group(1).splitlines():
-        k, _, v = line.partition(":")
-        v = v.strip()
-        if v.startswith("[") and v.endswith("]"):
-            v = [x.strip() for x in v[1:-1].split(",") if x.strip()]
-        elif len(v) >= 2 and v[0] == v[-1] == '"':
-            v = v[1:-1].replace('\\"', '"')
-        fm[k.strip()] = v
-    return fm, m.group(2)
+    return parse_block(m.group(1).splitlines())[0], m.group(2)
 
 
-def load_bank():
-    bank = {}
-    for p in sorted((ROOT / "bank").rglob("*.md")):
-        if p.name == "README.md":
+def athlete_dir():
+    return Path(os.environ.get("ATHLETE_DIR") or ROOT / "athlete")
+
+
+def load_profile():
+    path = athlete_dir() / "profile.md"
+    if not path.exists():
+        raise ProfileError(f"no Athlete Profile at {path}: run /setup")
+    return split_frontmatter(path.read_text())[0]
+
+
+def places(profile):
+    """The profile's Places in order, each a set of Equipment tags. The first is the default."""
+    if "places" not in profile:
+        if "equipment" in profile:
+            raise ProfileError("`equipment` is now `places`: write it as `places:` with "
+                               "`home: [..]` under it (docs/athlete-profile.md)")
+        raise ProfileError("no `places` in the Athlete Profile: run /setup")
+    out = {name: set(tags or []) for name, tags in (profile["places"] or {}).items()}
+    if not out:
+        raise ProfileError("`places` needs at least one Place")
+    return out
+
+
+def day_place(d, profile):
+    """A Plan row's Place name and Equipment: its `@<place>`, else the default Place."""
+    known = places(profile)
+    name = d.get("place") or next(iter(known))
+    if name not in known:
+        raise PlanError(f"{d['day']}: unknown Place '@{name}' (profile places: {', '.join(known)})")
+    return name, known[name]
+
+
+def load_exercise(fm, body):
+    """An Exercise (bank/exercises/, ADR 0004): pushed only inside a composed note."""
+    cue = re.sub(r"\n?Progress:.*", "", body.strip(), flags=re.S).strip()
+    sport = MOBILITY if fm["pattern"] == MOBILITY else "strength"
+    return {**fm, "kind": "exercise", "sport": sport, "delivery": "note",
+            "cue": " ".join(cue.split()), "prose": body.strip()}
+
+
+def bank_files(bank_dir, personal_dir):
+    """Every Bank file with its origin: the Core Bank, then the athlete's Personal part."""
+    for origin, d in (("core", bank_dir), ("personal", personal_dir)):
+        for p in sorted(Path(d).rglob("*.md")):
+            if p.name != "README.md":
+                yield origin, p
+
+
+def origin_label(origin):
+    return "Core" if origin == "core" else "Personal"
+
+
+def size_problem(name, n, bounds):
+    """"<name> needs lo–hi Exercises, has n", or None when n is within `bounds`."""
+    lo, hi = bounds
+    return None if lo <= n <= hi else f"{name} needs {lo}–{hi} Exercises, has {n}"
+
+
+def placeholder(pace):
+    return "{" + pace + "}"
+
+
+def file_problems(fm, body, exercise):
+    """The mechanical checks on one Bank file's frontmatter (ADR 0005)."""
+    if not exercise and "pattern" in fm:
+        return ["has a pattern, so it's an Exercise: Exercises go in exercises/"]
+    required = EXERCISE_FIELDS if exercise else WORKOUT_FIELDS
+    problems = [f"missing {f}" for f in required if f not in fm]
+    if exercise and ("reps" in fm) == ("hold" in fm):
+        problems.append("needs exactly one of reps or hold")
+    for field, known in (("kind", KINDS), ("sport", SPORTS), ("delivery", DELIVERIES),
+                         ("pattern", PATTERNS)):
+        if field in fm and fm[field] not in known:
+            problems.append(f"unknown {field} {fm[field]!r} (known: {', '.join(sorted(known))})")
+    tags = fm.get("equipment")
+    if "equipment" in fm and not isinstance(tags, list):
+        problems.append("equipment must be a list of tags, [] for none")
+    elif tags:
+        problems += [f"unknown equipment tag {t!r}" for t in tags if t not in EQUIPMENT_TAGS]
+    if fm.get("delivery") == "workout" and "```intervals\n" not in body:
+        problems.append("delivery: workout needs an ```intervals block")
+    if fm.get("kind") == "quality":
+        problems += [f"a quality Workout needs {f}" for f in ("ladder", "step") if f not in fm]
+    return problems
+
+
+def load_bank(bank_dir=None, personal_dir=None):
+    """Workouts and Exercises, Core and Personal (ADR 0005), keyed by ID in one namespace.
+
+    Every file must pass the mechanical checks: any failure is fatal, naming the file."""
+    bank, where, problems = {}, {}, []
+    bank_dir = bank_dir or ROOT / "bank"
+    personal_dir = personal_dir or athlete_dir() / "bank"
+    for origin, p in bank_files(bank_dir, personal_dir):
+        here = f"{origin_label(origin)} {p}"
+        try:
+            fm, body = split_frontmatter(p.read_text())
+        except PlanError as e:
+            problems.append(f"{here}: {e}")
             continue
-        fm, body = split_frontmatter(p.read_text())
+        exercise = p.parent.name == "exercises"
+        found = file_problems(fm, body, exercise)
+        if "id" in fm and fm["id"] != p.stem:
+            found.append(f"id {fm['id']} doesn't match the file name {p.name}")
+        problems += [f"{here}: {x}" for x in found]
+        if found:
+            continue
+        if fm["id"] in bank:
+            problems.append(f"duplicate Bank ID {fm['id']}: {where[fm['id']]} and {here}")
+            continue
+        where[fm["id"]] = here
+        if exercise:
+            bank[fm["id"]] = {**load_exercise(fm, body), "origin": origin}
+            continue
         block = re.search(r"```intervals\n(.*?)\n```", body, re.S)
         prose = re.sub(r"```intervals\n.*?\n```", "", body, flags=re.S)
         prose = re.sub(r"^# .*\n", "", prose.strip())
-        prose = re.sub(r"\n?On a good-weather day, swap this for .*", "", prose).strip()
-        bank[fm["id"]] = {**fm, "workout_text": block.group(1) if block else None, "prose": prose}
+        prose = re.sub(r"\n?Alternative: swap this for .*", "", prose).strip()
+        bank[fm["id"]] = {**fm, "workout_text": block.group(1) if block else None,
+                          "prose": prose, "origin": origin}
+    for wid, w in bank.items():
+        problems += [f"{where[wid]}: alternative {a} is not in the Bank"
+                     for a in alternatives_of(w) if a not in bank]
+    if problems:
+        raise BankError("\n  ".join(problems))
     return bank
 
 
@@ -121,12 +333,21 @@ def parse_week(path):
         if len(cells) != 6:
             raise PlanError(f"expected 6 columns: {line}")
         day, date_s, session, workouts, addon, _done = cells
+        session, _, place = session.partition("@")
+        session, place = session.strip(), place.strip() or None
         date = start + dt.timedelta(days=DAYS.index(day))
         if date_s and date_s != date.strftime("%m-%d"):
             raise PlanError(f"{day}: Date {date_s} should be {date:%m-%d}")
-        days.append(dict(day=day, date=date, session=session,
-                         workouts=[w.strip() for w in workouts.split(",") if w.strip()],
-                         addon=addon or None))
+        ids, extend = [], None
+        for token in (w.strip() for w in workouts.split(",") if w.strip()):
+            m = re.fullmatch(r"(\S+?)\s*\+(\d+)", token)
+            if m:
+                if extend is not None:
+                    raise PlanError(f"{day}: more than one Extension")
+                token, extend = m.group(1), (m.group(1), int(m.group(2)))
+            ids.append(token)
+        days.append(dict(day=day, date=date, session=session, place=place, workouts=ids,
+                         addon=split_top(addon), extend=extend))
     if [d["day"] for d in days] != DAYS:
         raise PlanError("Plan must list Mon..Sun once each, in order")
     return fm, days
@@ -142,65 +363,273 @@ def ext(week, suffix):
     return f"tp-{week}-{suffix}"
 
 
-def build_events(fm, days, bank):
+def other_workouts(profile):
+    """The profile's `other` activities as note Workouts, keyed `other:<id>`."""
+    return {OTHER + o["id"]: dict(id=OTHER + o["id"], name=o["name"], sport="other",
+                                  delivery="note", equipment=[],
+                                  prose=f"{o['name']}, {o['minutes']} min.")
+            for o in profile.get("other") or []}
+
+
+def needed_equipment(w):
+    # A smart trainer only decides whether a structured ride is indoor or outdoor.
+    return [t for t in w.get("equipment") or []
+            if not (t == SMART_TRAINER and w["delivery"] == "workout")]
+
+
+def alternatives_of(w):
+    """A Workout's `alternative`, one ID or a list in order of preference."""
+    alt = w.get("alternative") or []
+    return [alt] if isinstance(alt, str) else alt
+
+
+def note_event(name, description, date, external_id):
+    when = f"{date}T00:00:00"
+    return dict(category="NOTE", name=name, description=description,
+                start_date_local=when, end_date_local=when, external_id=external_id)
+
+
+def row_ids(d):
+    return d["workouts"] + d["addon"]
+
+
+def is_exercise(w):
+    return w.get("kind") == "exercise"
+
+
+def is_mobility(w):
+    return is_exercise(w) and w.get("pattern") == MOBILITY
+
+
+class Block(list):
+    """A run of consecutive Exercises in a cell, all strength or all mobility (ADR 0004)."""
+    @property
+    def mobility(self):
+        return is_mobility(self[0])
+
+
+def grouped(ids, bank):
+    """A cell's Workouts in order, with each run of consecutive Exercises as one Block.
+    Mobility and strength Exercises never share a Block."""
+    out = []
+    for w in (bank[i] for i in ids):
+        if not is_exercise(w):
+            out.append(w)
+        elif out and isinstance(out[-1], Block) and out[-1].mobility == is_mobility(w):
+            out[-1].append(w)
+        else:
+            out.append(Block([w]))
+    return out
+
+
+def composed_note(exercises, level, title=None):
+    """One composed block as a note Workout (ADR 0004). Strength takes its rounds from the
+    Level; a mobility block is slow rounds, the same at every Level."""
+    if all(is_mobility(e) for e in exercises):
+        rounds, title = MOBILITY_ROUNDS, title or "Mobility"
+        how = "moving slowly from one to the next, breathing into each hold"
+    else:
+        rounds, title = ROUNDS.get(level, ROUNDS["normal"]), title or "Strength"
+        how = "resting 60–90 s between rounds"
+    lines = [f"- {e['name']} × {e.get('reps') or e.get('hold')}: {e['cue']}" for e in exercises]
+    return dict(id="+".join(e["id"] for e in exercises), name=f"{title} ({rounds} rounds)",
+                sport=exercises[0]["sport"], delivery="note", equipment=[],
+                prose=f"{rounds} rounds, {how}.\n\n" + "\n".join(lines))
+
+
+def composed(ids, bank, level):
+    """A cell's Workouts, with each Block of Exercises composed into one note."""
+    return [composed_note(g, level) if isinstance(g, Block) else g for g in grouped(ids, bank)]
+
+
+def addon_not_exercises(d, bank):
+    """The Add-on cell's IDs that aren't Exercises: it holds Exercises only."""
+    return [i for i in d["addon"] if not is_exercise(bank[i])]
+
+
+def pairing_problem(session, workouts, pairings):
+    # A mobility Workout and a mobility block are one Mobility Session, not a pairing.
+    sports = [w["sport"] for w in workouts]
+    sports = [s for i, s in enumerate(sports) if s != MOBILITY or MOBILITY not in sports[:i]]
+    if session == "Test" or len(sports) < 2:
+        return None  # a Test row is the test note plus its spin, not a pairing
+    if session == "Quality":
+        return "nothing can be paired with a Quality Session"
+    if "other" in sports:
+        return "other activities can't be paired"
+    if not any(set(p.split("+")) == set(sports) for p in pairings):
+        return (f"{' + '.join(sports)} is not an allowed pairing "
+                f"(profile pairings: {', '.join(pairings) or 'none'})")
+    return None
+
+
+def plan_problems(d, bank, level, profile, place):
+    """What's wrong with one Plan row at `place`, its (name, Equipment) from day_place.
+    `bank` includes the profile's other activities."""
+    place, equipment = place
+    problems = []
+    if d["session"] not in SESSION_KINDS:
+        problems.append(f"unknown Session '{d['session']}'")
+    if d["addon"] and d["session"] not in ("Endurance", "Test"):
+        problems.append("Add-on only allowed on Endurance or Test rows")
+    ids = row_ids(d)
+    unknown_other = [w for w in ids if w.startswith(OTHER) and w not in bank]
+    for w in unknown_other:
+        problems.append(f"{w} is not in the profile's other activities")
+    missing = [w for w in ids if w not in bank and w not in unknown_other]
+    if missing:
+        problems.append(f"not in Bank: {', '.join(missing)}")
+    if missing or unknown_other:
+        return problems
+    for w in (bank[i] for i in d["workouts"]):
+        if w.get("levels") and level not in w["levels"]:
+            problems.append(f"{w['id']} is for {'/'.join(w['levels'])} weeks only")
+    for w in [bank[i] for i in ids]:
+        lacking = [t for t in needed_equipment(w) if t not in equipment]
+        if lacking:
+            problems.append(f"{w['id']} needs {', '.join(lacking)} (not at {place})")
+        for pace in PACES:
+            if placeholder(pace) in w["prose"] and not profile.get(pace):
+                problems.append(f"{w['id']} needs {pace} in the profile")
+    problems += composition_problems(d, bank)
+    workouts = composed(d["workouts"], bank, level)
+    pairing = pairing_problem(d["session"], workouts, profile.get("pairings") or [])
+    if pairing:
+        problems.append(pairing)
+    if sum(w["delivery"] == "workout" for w in workouts) > 1:
+        problems.append("more than one ride Workout")
+    if d.get("extend"):
+        problems += extension_problems(d, bank, level)
+    return problems
+
+
+def composition_problems(d, bank):
+    """Composed strength: block sizes, no repeats, Exercise-only Add-ons (ADR 0004)."""
+    problems = []
+    groups = grouped(d["workouts"], bank)
+    blocks = [g for g in groups if isinstance(g, Block)]
+    if len(blocks) != len({b.mobility for b in blocks}):
+        problems.append("a Workout cell has one block of consecutive Exercises, "
+                        "or one of strength and one of mobility")
+    routine = any(not isinstance(g, Block) and g["sport"] == MOBILITY for g in groups)
+    for b in blocks:
+        if not b.mobility:
+            sized = size_problem("a Strength block", len(b), STRENGTH_BLOCK)
+        elif routine:  # a whole routine plus a few Exercises: one Mobility Session
+            sized = size_problem("a Mobility block after a mobility Workout", len(b), MOBILITY_TOP_UP)
+        else:
+            sized = size_problem("a Mobility block", len(b), MOBILITY_BLOCK)
+        problems += [sized] if sized else []
+    not_exercises = addon_not_exercises(d, bank)
+    if not_exercises:
+        problems.append(f"the Add-on holds Exercises only, not {', '.join(not_exercises)}")
+    elif d["addon"]:
+        sized = size_problem("an Add-on", len(d["addon"]), ADD_ON_BLOCK)
+        problems += [sized] if sized else []
+    exercise_ids = [i for i in row_ids(d) if is_exercise(bank[i])]
+    for i in dict.fromkeys(i for i in exercise_ids if exercise_ids.count(i) > 1):
+        problems.append(f"{i} is in the row twice")
+    return problems
+
+
+def extension_problems(d, bank, level):
+    wid, minutes = d["extend"]
+    lo, hi = EXTENSION_MIN
+    problems = []
+    if level != "push":
+        problems.append(f"{wid} +{minutes}: Extensions are for Push weeks only")
+    if d["session"] != "Quality" or bank[wid]["delivery"] != "workout":
+        problems.append(f"{wid} +{minutes}: only a Quality ride can have an Extension")
+    if not lo <= minutes <= hi:
+        problems.append(f"{wid} +{minutes}: an Extension is {lo}–{hi} min")
+    return problems
+
+
+def extended(workout_text, minutes):
+    """Insert `minutes` at Endurance before the Cooldown section."""
+    block = f"Extension\n- {minutes}m {EXTENSION_PCT}%\n\n"
+    if "\nCooldown" not in workout_text:
+        return workout_text.rstrip() + "\n\n" + block.rstrip()
+    return workout_text.replace("\nCooldown", "\n" + block + "Cooldown", 1)
+
+
+def build_events(fm, days, bank, profile):
     week, level = fm["week"], fm["level"]
+    bank = {**bank, **other_workouts(profile)}
+    tiered = set(profile.get("tiers") or {})
+    alternatives = profile.get("alternatives") == "on"
+    place_equipment = places(profile).values()
+
+    def description(w):
+        out = w["prose"]
+        for pace in PACES:
+            out = out.replace(placeholder(pace), profile.get(pace) or placeholder(pace))
+        dose = (w.get("dose") or {}).get(level)
+        return out + (f"\n\nToday: {dose}" if dose else "")
+
+    def offered(alt):
+        """An Alternative is a swap on the day, so it may be at any one of the Places."""
+        return (alternatives and alt is not None and alt["sport"] in tiered
+                and any(all(t in equipment for t in needed_equipment(alt))
+                        for equipment in place_equipment))
+
+    def alternative_line(w):
+        """The first of the Workout's Alternatives the profile can use, if any."""
+        alt = next((bank[a] for a in alternatives_of(w) if offered(bank.get(a))), None)
+        return f"\n\nAlternative: {alt['name']}. {description(alt)}" if alt else ""
+
+    def combined(workouts):
+        return (" + ".join(w["name"] for w in workouts),
+                "\n\n".join(description(w) + alternative_line(w) for w in workouts))
+
     events, problems = [], []
+    if sum(1 for d in days if d.get("extend")) > 1:
+        problems.append("at most one Extension a week")
     for d in days:
         if not d["session"] and not d["workouts"] and not d["addon"]:
             continue  # unplanned day in a partial week
-        if d["session"] not in SESSION_KINDS:
-            problems.append(f"{d['day']}: unknown Session '{d['session']}'")
-        if d["addon"] and d["session"] not in ("Endurance", "Test"):
-            problems.append(f"{d['day']}: Add-on only allowed on Endurance or Test rows")
-        missing = [w for w in d["workouts"] + ([d["addon"]] if d["addon"] else []) if w not in bank]
-        if missing:
-            problems.append(f"{d['day']}: not in Bank: {', '.join(missing)}")
+        try:
+            place = day_place(d, profile)
+        except PlanError as e:  # an unknown @place
+            problems.append(str(e))
             continue
-        ws = [bank[w] for w in d["workouts"]]
-        for w in ws:
-            if w.get("levels") and level not in w["levels"]:
-                problems.append(f"{d['day']}: {w['id']} is for {'/'.join(w['levels'])} weeks only")
-        rides = [w for w in ws if w["delivery"] == "workout"]
-        if len(rides) > 1:
-            problems.append(f"{d['day']}: more than one ride Workout")
-        when = f"{d['date']}T00:00:00"
-        notes = [w for w in ws if w["delivery"] != "workout"]
+        equipment = place[1]
+        problems += [f"{d['day']}: {p}" for p in plan_problems(d, bank, level, profile, place)]
+        if any(w not in bank for w in row_ids(d)):
+            continue
+        workouts = composed(d["workouts"], bank, level)
+        rides = [w for w in workouts if w["delivery"] == "workout"]
+        notes = [w for w in workouts if w["delivery"] != "workout"]
         if rides and notes:  # e.g. Test row: MyWhoosh test note + pushed spin
-            events.append(dict(category="NOTE", name=" + ".join(w["name"] for w in notes),
-                               description="\n\n".join(w["prose"] for w in notes),
-                               start_date_local=when, end_date_local=when,
-                               external_id=ext(week, f"{d['day']}-note")))
+            events.append(note_event(*combined(notes), d["date"], ext(week, f"{d['day']}-note")))
         if rides:
-            r = rides[0]
-            desc = r["prose"]
-            if r.get("run_alternative") in bank:
-                alt = bank[r["run_alternative"]]
-                desc += f"\n\nGood weather? Run instead: {alt['name']}. {alt['prose']}"
-            desc += "\n\n" + r["workout_text"]
-            events.append(dict(category="WORKOUT", type="Ride", indoor=True, name=r["name"],
-                               description=desc, start_date_local=when,
+            ride = rides[0]
+            name, text = ride["name"], ride["workout_text"]
+            desc = description(ride)
+            if d.get("extend") and d["extend"][0] == ride["id"]:
+                minutes = d["extend"][1]
+                name += f" +{minutes}′"
+                text = extended(text, minutes)
+                desc += f"\n\nToday: +{minutes} min at Endurance ({EXTENSION_PCT}%) before the cooldown."
+            desc += alternative_line(ride)
+            desc += "\n\n" + text
+            events.append(dict(category="WORKOUT", type="Ride", name=name,
+                               indoor=SMART_TRAINER in equipment, description=desc, start_date_local=f"{d['date']}T00:00:00",
                                external_id=ext(week, d["day"])))
-        elif ws:
-            events.append(dict(category="NOTE", name=" + ".join(w["name"] for w in ws),
-                               description="\n\n".join(w["prose"] for w in ws),
-                               start_date_local=when, end_date_local=when,
-                               external_id=ext(week, d["day"])))
-        if d["addon"]:
-            a = bank[d["addon"]]
-            events.append(dict(category="NOTE", name=a["name"], description=a["prose"],
-                               start_date_local=when, end_date_local=when,
-                               external_id=ext(week, f"{d['day']}-addon")))
+        elif workouts:
+            events.append(note_event(*combined(workouts), d["date"], ext(week, d["day"])))
+        if d["addon"] and not addon_not_exercises(d, bank):
+            addon = composed_note([bank[i] for i in d["addon"]], level, "Add-on")
+            events.append(note_event(addon["name"], description(addon), d["date"],
+                                     ext(week, f"{d['day']}-addon")))
     sunday = days[-1]["date"]
-    next_week = week_id(sunday + dt.timedelta(days=1))
-    events.append(dict(category="NOTE", name="Check-in: plan next week",
-                       description="Sunday Check-in with Claude: review this week, pick next week's Level.",
-                       start_date_local=f"{sunday}T00:00:00", end_date_local=f"{sunday}T00:00:00",
-                       external_id=ext(week, "checkin")))
     monday = sunday + dt.timedelta(days=1)
-    events.append(dict(category="NOTE", name="Check-in needed",
-                       description="No Week Plan yet for this week. Run the Check-in with Claude.",
-                       start_date_local=f"{monday}T00:00:00", end_date_local=f"{monday}T00:00:00",
-                       external_id=ext(next_week, "checkin-needed")))
+    events.append(note_event("Check-in: plan next week",
+                             "Sunday Check-in with Claude: review this week, pick next week's Level.",
+                             sunday, ext(week, "checkin")))
+    events.append(note_event("Check-in needed",
+                             "No Week Plan yet for this week. Run the Check-in with Claude.",
+                             monday, ext(week_id(monday), "checkin-needed")))
     return events, problems
 
 
@@ -218,7 +647,7 @@ def all_ext_ids(week, monday):
 # ── commands ─────────────────────────────────────────────────────────────
 def cmd_push_week(path, from_date=None, dry_run=False):
     fm, days = parse_week(path)
-    events, problems = build_events(fm, days, load_bank())
+    events, problems = build_events(fm, days, load_bank(), load_profile())
     if problems:
         sys.exit("Plan problems:\n  " + "\n  ".join(problems))
     week = fm["week"]
@@ -240,6 +669,13 @@ def cmd_push_week(path, from_date=None, dry_run=False):
     print(f"pushed {len(res)} events for {week}")
     if errs:
         print("push errors:\n  " + "\n  ".join(map(str, errs)))
+
+
+def cmd_check_bank():
+    bank = load_bank()
+    mine = sorted(i for i, w in bank.items() if w["origin"] == "personal")
+    print(f"Workout Bank OK: {len(bank) - len(mine)} Core, {len(mine)} Personal"
+          + (f" ({', '.join(mine)})" if mine else ""))
 
 
 def cmd_clear_week(week):
@@ -277,6 +713,30 @@ def cmd_fitness(oldest, newest):
               f"form {form:>5}  ramp {w.get('rampRate', '-')}")
 
 
+def cmd_whoami():
+    if not ATHLETE:
+        sys.exit("INTERVALS_ATHLETE_ID isn't set in .env")
+    me = call("GET", "", None, "0")
+    print(f"authenticated as {me.get('name') or '?'} ({me['id']})")
+    if me["id"] != ATHLETE:
+        sys.exit(f"API says your athlete ID is {me['id']}, not {ATHLETE} as in .env")
+
+
+TEST_RIDE = "- 10m 55%\n\n3x\n- 2m 75%\n- 2m 55%\n\n- 5m 50%"
+
+
+def cmd_test_ride(date):
+    when = f"{dt.date.fromisoformat(date)}T00:00:00"
+    ev = call("POST", "/events", dict(category="WORKOUT", type="Ride", name="Setup test (delete me)",
+                                      start_date_local=when, description=TEST_RIDE))
+    print(ev["id"])
+
+
+def cmd_delete_event(event_id):
+    call("DELETE", f"/events/{event_id}")
+    print(f"deleted event {event_id}")
+
+
 def main(argv):
     if len(argv) < 2:
         sys.exit(__doc__)
@@ -287,15 +747,29 @@ def main(argv):
         from_date = args[args.index("--from") + 1]
         args = [a for i, a in enumerate(args) if a != "--from" and (i == 0 or args[i - 1] != "--from")]
     args = [a for a in args if a not in flags]
+    commands = {
+        "push-week": lambda path: cmd_push_week(path, from_date, "--dry-run" in flags),
+        "check-bank": cmd_check_bank,
+        "clear-week": cmd_clear_week,
+        "events": cmd_events,
+        "rides": cmd_rides,
+        "fitness": cmd_fitness,
+        "whoami": cmd_whoami,
+        "test-ride": cmd_test_ride,
+        "delete-event": cmd_delete_event,
+    }
+    if cmd not in commands:
+        sys.exit(__doc__)
     try:
-        if cmd == "push-week":
-            cmd_push_week(args[0], from_date, "--dry-run" in flags)
-        elif cmd == "clear-week":
-            cmd_clear_week(args[0])
-        elif cmd in ("events", "rides", "fitness"):
-            {"events": cmd_events, "rides": cmd_rides, "fitness": cmd_fitness}[cmd](*args[:2])
-        else:
-            sys.exit(__doc__)
+        inspect.signature(commands[cmd]).bind(*args)
+    except TypeError:
+        sys.exit(__doc__)
+    try:
+        commands[cmd](*args)
+    except ProfileError as e:
+        sys.exit(f"Athlete Profile problem: {e}")
+    except BankError as e:
+        sys.exit(f"Workout Bank problem: {e}")
     except PlanError as e:
         sys.exit(f"Week Record problem: {e}")
 
