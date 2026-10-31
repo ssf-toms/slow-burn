@@ -15,7 +15,7 @@ Week Record format: docs/week-records.md. Workout Bank: bank/README.md.
 push-week checks the plan against the Athlete Profile (docs/athlete-profile.md),
 read from athlete/profile.md, or $ATHLETE_DIR/profile.md when that is set.
 Credentials: INTERVALS_ATHLETE_ID and INTERVALS_KEYCHAIN_SERVICE in .env, API
-key in the macOS Keychain (written by scripts/setup-intervals.sh).
+key in the macOS Keychain. The /setup skill sets all three up.
 """
 import base64
 import datetime as dt
