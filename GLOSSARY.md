@@ -1,17 +1,17 @@
 # Slow Burn
 
-A personal system for planning a week of training ahead of time: indoor/outdoor cycling, running, kettlebell/band strength and physical therapy, aimed at aerobic fitness and durability rather than competition.
+A personal system for planning a week of training ahead of time: cycling, running, swimming, strength and mobility, aimed at aerobic fitness and durability rather than competition.
 
 ## Language
 
 ### Athlete
 
 **Athlete Profile**:
-The lasting description of the person being planned for: their Sport Tiers, Equipment, experience, availability, easy run pace, whether they have a PT routine, and their FTP and heart-rate numbers. Their Week Templates are generated from it.
+The lasting description of the person being planned for: their Sport Tiers, Equipment, experience, availability, easy and threshold run pace, Places, and their FTP and heart-rate numbers. Their Week Templates are generated from it.
 _Avoid_: Settings, config, user
 
 **Sport Tier**:
-How much an activity counts in the Athlete Profile. Every activity has a Tier, including strength and PT, so a profile can be just PT and home strength. **Primary** activities get the most Sessions, and a Quality slot each where they have Ladders. **Secondary** activities get one or two steady, easy Sessions a week. **Occasional** activities appear as an Alternative or a single Session. More than one activity can be Primary.
+How much an activity counts in the Athlete Profile. Every activity has a Tier, including strength and mobility, so a profile can be just mobility and home strength. **Primary** activities get the most Sessions, and a Quality slot each where they have Ladders. **Secondary** activities get one or two steady, easy Sessions a week. **Occasional** activities appear as an Alternative or a single Session. More than one activity can be Primary.
 _Avoid_: Weight, priority, percentage
 
 **Tiered**:
@@ -19,8 +19,12 @@ Said of an activity that has a Sport Tier in the Athlete Profile, at any Tier, O
 _Avoid_: Enabled, active, selected
 
 **Equipment**:
-What the athlete has access to for training, as a flat list (for example bodyweight, bands, kettlebell, dumbbells, gym, smart trainer, pool). A Workout can be planned only if the athlete has all the Equipment it needs, except that a structured ride doesn't need the smart trainer: it only decides whether the ride is indoor or outdoor.
+What the athlete has access to for training at a Place, as a list (for example bodyweight, bands, kettlebell, dumbbells, barbell, smart trainer, pool). A Workout or Exercise can be planned on a day only if that day's Place has all the Equipment it needs, except that a structured ride doesn't need the smart trainer: it only decides whether the ride is indoor or outdoor.
 _Avoid_: Gear, kit
+
+**Place**:
+A named spot where the athlete trains (home, gym), with its own Equipment, listed in the Athlete Profile. A Week Template says which Place each day's Session is at. Most athletes have one Place.
+_Avoid_: Location, venue, site
 
 **Setup**:
 The one-time conversation that builds the Athlete Profile, approves the Week Templates, and connects intervals.icu. It can be run again to change the profile.
@@ -33,19 +37,31 @@ A reusable definition of a training activity (structure, targets, instructions) 
 _Avoid_: Session (when meaning the definition), template, routine
 
 **Dose**:
-How much of a Workout is done at a given Week Level: rounds or exercises for strength and PT, minutes for an Endurance ride. The Workout states its Dose for each Level.
+How much of a Workout is done at a given Week Level: rounds or Exercises for strength and mobility, minutes for an Endurance ride or run. The Workout states its Dose for each Level.
 _Avoid_: Volume, size, amount
 
 **Extension**:
 10–15 extra minutes at Endurance added before the cooldown of one Quality ride in a Push week, now and then. It's written `+<minutes>` after the Workout's ID in the Week Plan (`th-2 +15`). It's part of the Dose, so the Workout itself doesn't change.
 _Avoid_: Bonus, extra volume
 
+**Exercise**:
+A single strength or mobility movement (a goblet squat, a band row, a hip flexor stretch) with its movement pattern and the Equipment it needs, kept in the Workout Bank. Strength Sessions, Strength Add-ons and Mobility Sessions are composed from Exercises; across a week, strength covers every pattern.
+_Avoid_: Move, drill, lift
+
 **Workout Bank**:
-The small curated set of Workouts that every Week Plan draws from.
+Everything a Week Plan draws from: the Core Bank plus the athlete's Personal Workouts.
 _Avoid_: Library, catalogue, database
 
+**Core Bank**:
+The curated part of the Workout Bank that ships with Slow Burn: foundational, widely applicable Workouts and Exercises chosen for function and variety, not completeness.
+_Avoid_: Default bank, built-ins
+
+**Personal Workout**:
+A Workout the athlete adds themselves, kept in their own repo, which counts as part of their Workout Bank once it passes the Bank's checklist of principles.
+_Avoid_: Custom workout, user workout
+
 **Bank gap**:
-A slot an athlete's Week Templates call for that the Workout Bank can't fill for them: a tiered sport with no Workouts, or Workouts that all need Equipment the athlete lacks. Setup lists gaps in the Athlete Profile's Notes, and they're never filled with an invented Workout. Called a gap for short.
+A slot an athlete's Week Templates call for that the Workout Bank can't fill for them: a tiered sport with no Workouts, or Workouts that all need Equipment the athlete lacks. Setup lists gaps in the Athlete Profile's Notes. A gap can be closed by a Personal Workout that passes the checklist, never by an unchecked one made up on the spot. Called a gap for short.
 _Avoid_: Missing workout, hole, TODO
 
 **Ladder**:
@@ -55,11 +71,11 @@ _Avoid_: Progression, plan, series
 ### Days and sessions
 
 **Session**:
-The main planned activity for a day. A day has exactly one Session, optionally followed by a Strength Add-on. A Session can combine Workouts (such as PT then strength) only if the athlete chose that pairing in their Athlete Profile.
+The main planned activity for a day. A day has exactly one Session, optionally followed by a Strength Add-on. A Session can combine Workouts (such as mobility then strength) only if the athlete chose that pairing in their Athlete Profile.
 _Avoid_: Workout (when meaning the scheduled thing), activity, training
 
 **Pairing**:
-Two Workouts the athlete has chosen to combine in one Session (such as PT then strength), listed in the Athlete Profile. Nothing is paired with a Quality Session, and Other activities are never paired.
+Two Workouts the athlete has chosen to combine in one Session (such as mobility then strength), listed in the Athlete Profile. Nothing is paired with a Quality Session, and Other activities are never paired.
 _Avoid_: Combo, superset, double
 
 **Quality Session**:
@@ -75,27 +91,27 @@ A Workout of similar effort in another sport, named next to an Endurance Session
 _Avoid_: Backup, substitute, option
 
 **Strength Session**:
-A resistance session (bodyweight, bands, weights) that stands as a day's Session. It is a training day, never a Recovery Day.
+A resistance session (bodyweight, bands, weights) that stands as a day's Session, composed fresh for each Week Plan from the Exercises its day's Place allows. It is a training day, never a Recovery Day.
 _Avoid_: Gym, lifting, conditioning
 
 **Strength Add-on**:
-A short (~15 min) kettlebell/band block done straight after an Endurance Session or a Test Session's easy spin; it never follows a Quality Session.
+A short (~15 min) block of Exercises done straight after an Endurance Session or a Test Session's easy spin; it never follows a Quality Session.
 _Avoid_: Finisher, extra
 
 **Test Session**:
-A day built around the FTP test, followed by an easy spin.
+A day built around a fitness test that resets a Primary sport's targets: the FTP test followed by an easy spin for ride, or a time trial that sets threshold pace for run.
 _Avoid_: Test day, benchmark
 
-**PT Session**:
-The ~30 min physical-therapy routine, done for maintenance.
-_Avoid_: Mobility, rehab, stretching
+**Mobility Session**:
+A ~30 min session of mobility work, done for maintenance: either composed from mobility Exercises, or a fixed routine the athlete keeps as a Personal Workout (a physical-therapy routine, say).
+_Avoid_: PT Session, rehab, stretching
 
 **Other**:
-A free-form activity the athlete does regularly outside the Workout Bank (a Pilates class, say), listed in the Athlete Profile's `other` and written `other:<id>` in a Week Plan. It counts either as training, as an `Other` Session on a training day, or as recovery, filling a Recovery Day. It's pushed as a calendar note, never Quality and never paired.
+A free-form activity the athlete does regularly outside the Workout Bank (a Pilates class, say), listed in the Athlete Profile's `other` and written `other:<id>` in a Week Plan. It counts either as training, as an `Other` Session on a training day, or as recovery, filling a Recovery Day. It's pushed as a calendar note, never Quality and never paired. Unlike a Personal Workout, its content isn't the athlete's to define (a class, a club run), so it has no Dose and skips the Bank's checklist.
 _Avoid_: Custom workout, misc, extra
 
 **Recovery Day**:
-A day whose Session is a PT Session, a walk, a recovery-type Other activity, or full rest. Every other day is a training day.
+A day whose Session is a Mobility Session, a walk, a recovery-type Other activity, or full rest. Every other day is a training day.
 _Avoid_: Rest day, off day
 
 ### Planning
