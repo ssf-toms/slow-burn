@@ -103,7 +103,7 @@ A day built around a fitness test that resets a Primary sport's targets: the FTP
 _Avoid_: Test day, benchmark
 
 **Mobility Session**:
-A ~30 min session of mobility work, done for maintenance: either composed from mobility Exercises, or a fixed routine the athlete keeps as a Personal Workout (a physical-therapy routine, say).
+A ~30 min session of mobility work, done for maintenance: a whole mobility Workout (such as a physical-therapy routine the athlete keeps as a Personal Workout), a session composed from mobility Exercises, or a routine with a few Exercises added. It's one activity, so this isn't a Pairing.
 _Avoid_: PT Session, rehab, stretching
 
 **Other**:
