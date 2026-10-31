@@ -49,6 +49,5 @@ How the rules in `docs/planning-rules.md` were applied:
 
 - Rides are outdoors. With no `smart-trainer`, rides are pushed as outdoor and the MyWhoosh steps are skipped.
 - Gaps found at Setup (for the Bank, item 3):
-  - **No swim Workouts** in the Bank yet, so swim Sessions and the swim Alternative can't be filled.
   - **The FTP test** (`ftp-ramp-test`) is a MyWhoosh Ramp Test, which needs a smart trainer. Ride is Primary, so a test is due, but there's no outdoor test.
   - **Two of the three Strength Add-ons** (`addon-upper`, `addon-posterior`) need a kettlebell, which isn't in `equipment` (the gym has none). Only `addon-core` (bands, bodyweight) can be planned, so every Add-on is `addon-core` until the Bank has more.

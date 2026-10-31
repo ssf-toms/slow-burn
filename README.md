@@ -4,7 +4,7 @@ A weekly training planner for aerobic fitness and durability, not racing. It pla
 
 ## The idea
 
-- **Start from you.** A one-time **Setup** builds your **Athlete Profile**: a **Sport Tier** for each activity (Primary, Secondary, Occasional), the **Equipment** you have, your experience and the days you can train. It generates your **Week Templates** from that, and only plans Workouts your Equipment allows. Where the Bank has nothing to fill a slot (there are no swim Workouts yet, and no swim Ladders), Setup tells you instead of inventing one.
+- **Start from you.** A one-time **Setup** builds your **Athlete Profile**: a **Sport Tier** for each activity (Primary, Secondary, Occasional), the **Equipment** you have, your experience and the days you can train. It generates your **Week Templates** from that, and only plans Workouts your Equipment allows. Where the Bank has nothing to fill a slot (there are no swim Ladders yet, for example), Setup tells you instead of inventing one.
 - **Plan the week before it starts.** A Sunday **Check-in** reviews the week and picks a **Week Level**: Light, Normal or Push. A Level picks how many of your available days are training days, and the Dose of each Workout (rounds for strength and PT, minutes for an Endurance ride).
 - **Climb slowly.** Quality rides and runs sit on **Ladders** (Sweet Spot or run Tempo, Threshold, VO2max). You move up a step only after finishing the current one at an effort of 7/10 or below.
 - **Back off before you need to.** **Load Warnings** suggest a Light week after a run of hard weeks, or when fitness and fatigue numbers look stretched. They're advice only: you decide.
@@ -39,7 +39,7 @@ Run `/setup` again whenever your sports, Equipment or availability change.
 - **Sunday (or Monday morning):** `/checkin`. Review last week, choose a Level, approve the Week Plan, and it's pushed and committed to `athlete/weeks/`.
 - **Mid-week, if needed:** `/adjust`. Reshuffle the rest of the week and re-push it.
 
-Runs, PT and walks aren't synced: you report them at the Check-in ([ADR 0002](docs/adr/0002-runs-reported-not-synced.md)).
+Runs, swims, PT and walks aren't synced: you report them at the Check-in ([ADR 0002](docs/adr/0002-runs-reported-not-synced.md)).
 
 ## License
 

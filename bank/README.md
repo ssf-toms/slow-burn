@@ -18,14 +18,14 @@ Ride targets are **%FTP** with simple steps and repeats, and no ramps or cadence
 | `id` | lowercase, dashes | The name used in Week Records. Same as the file name. |
 | `name` | string | The calendar title. |
 | `kind` | `quality` \| `endurance` \| `strength` \| `add-on` \| `pt` \| `recovery` \| `test` | What the Workout is for. |
-| `sport` | `ride` \| `run` \| `walk` \| `strength` \| `pt` | The activity. |
+| `sport` | `ride` \| `run` \| `swim` \| `walk` \| `strength` \| `pt` | The activity. |
 | `duration_min` | number | Typical length in minutes. |
 | `equipment` | list of tags, `[]` for none | The Equipment the Workout needs, from the tags in `docs/athlete-profile.md` (`bodyweight`, `bands`, `kettlebell`, `dumbbells`, `barbell`, `gym`, `smart-trainer`, `pool`, `hr-strap`). It can only be planned if the athlete has every tag. The one exception: `smart-trainer` on a `delivery: workout` ride only decides whether it's pushed as indoor or outdoor, so the ride can be planned without one. Required in every file. |
 | `delivery` | `workout` \| `note` | `workout` is pushed as a structured workout (rides). `note` is a calendar note. |
 | `ladder`, `step` | Ladder name, number | Quality Workouts only: which Ladder, and which step on it. |
 | `variant_group` | string | Workouts that rotate with each other (Endurance rides, runs, Strength, Add-ons). |
 | `levels` | list, e.g. `[push]` | Optional. The Week Levels it may be planned in. Left out means any. |
-| `alternative` | Workout `id` | Optional. The Alternative of similar effort, in another sport, offered next to this Endurance Workout. The body ends with a matching `Alternative: swap this for …` line, which is not pushed. |
+| `alternative` | Workout `id`, or a list of them | Optional. The Alternative of similar effort, in another sport, offered next to this Endurance Workout. A list is in order of preference: `push-week` offers the first one in a tiered sport whose Equipment the profile has. The body ends with a matching `Alternative: swap this for …` line, which is not pushed. |
 | `dose` | `{light: "...", normal: "...", push: "..."}` | Optional. The Workout's Dose at each Week Level, for example rounds for strength. Not set on any Workout yet. |
 
 Run Workouts write their pace as `{easy_run_pace}` or `{threshold_run_pace}`, filled from the Athlete Profile when they're pushed. Run Quality targets are threshold pace plus an offset, with an RPE alongside for hills, wind and bad days:
@@ -63,27 +63,38 @@ Pushed as notes. Each has a 15′ easy warm-up with strides and a 10′ easy coo
 
 ### Endurance
 
-| Ride | Min | Alternative | Levels |
-|------|-----|-----------------|--------|
-| [end-ride-50](endurance/end-ride-50.md) | 50 | run-easy-6-8 | any |
-| [end-ride-50-rolling](endurance/end-ride-50-rolling.md) | 50 | run-easy-6-8 | any |
-| [end-ride-50-steps](endurance/end-ride-50-steps.md) | 50 | run-easy-6-8 | any |
-| [end-ride-60](endurance/end-ride-60.md) | 60 | run-easy-8-10 | any |
-| [end-ride-60-rolling](endurance/end-ride-60-rolling.md) | 60 | run-easy-8-10 | any |
-| [end-ride-60-steps](endurance/end-ride-60-steps.md) | 60 | run-easy-8-10 | any |
-| [end-ride-60-openers](endurance/end-ride-60-openers.md) | 60 | run-easy-strides | any |
-| [end-ride-75](endurance/end-ride-75.md) | 75 | run-easy-8-10 | Normal, Push |
-| [end-ride-75-progressive](endurance/end-ride-75-progressive.md) | 75 | run-easy-10-12 | Push |
+Alternatives are listed in order of preference: the first one the profile can use is offered (a tiered sport, and the Equipment it needs).
 
-| Run | Min | Alternative | Levels |
-|-----|-----|-------------|--------|
-| [run-easy-5-6](endurance/run-easy-5-6.md) | 38 | end-ride-50 | any |
-| [run-easy-6-8](endurance/run-easy-6-8.md) | 45 | end-ride-50 | any |
-| [run-easy-strides](endurance/run-easy-strides.md) | 48 | end-ride-50-rolling | any |
-| [run-easy-8-10](endurance/run-easy-8-10.md) | 55 | end-ride-60 | any |
-| [run-easy-10-12](endurance/run-easy-10-12.md) | 68 | end-ride-75 | Push (the long run) |
+| Ride | Min | Alternatives | Levels |
+|------|-----|--------------|--------|
+| [end-ride-50](endurance/end-ride-50.md) | 50 | swim-easy-1500, run-easy-6-8 | any |
+| [end-ride-50-rolling](endurance/end-ride-50-rolling.md) | 50 | swim-drills-1800, run-easy-6-8 | any |
+| [end-ride-50-steps](endurance/end-ride-50-steps.md) | 50 | swim-easy-1500, run-easy-6-8 | any |
+| [end-ride-60](endurance/end-ride-60.md) | 60 | run-easy-8-10, swim-steady-2000 | any |
+| [end-ride-60-rolling](endurance/end-ride-60-rolling.md) | 60 | run-easy-8-10, swim-steady-2000 | any |
+| [end-ride-60-steps](endurance/end-ride-60-steps.md) | 60 | run-easy-8-10, swim-steady-2000 | any |
+| [end-ride-60-openers](endurance/end-ride-60-openers.md) | 60 | run-easy-strides, swim-drills-1800 | any |
+| [end-ride-75](endurance/end-ride-75.md) | 75 | run-easy-8-10, swim-steady-2500 | Normal, Push |
+| [end-ride-75-progressive](endurance/end-ride-75-progressive.md) | 75 | run-easy-10-12, swim-steady-2500 | Push |
+
+| Run | Min | Alternatives | Levels |
+|-----|-----|--------------|--------|
+| [run-easy-5-6](endurance/run-easy-5-6.md) | 38 | end-ride-50, swim-easy-1500 | any |
+| [run-easy-6-8](endurance/run-easy-6-8.md) | 45 | end-ride-50, swim-drills-1800 | any |
+| [run-easy-strides](endurance/run-easy-strides.md) | 48 | end-ride-50-rolling, swim-drills-1800 | any |
+| [run-easy-8-10](endurance/run-easy-8-10.md) | 55 | end-ride-60, swim-steady-2000 | any |
+| [run-easy-10-12](endurance/run-easy-10-12.md) | 68 | end-ride-75, swim-steady-2500 | Push (the long run) |
 
 Runs are at easy pace (`{easy_run_pace}` from the Athlete Profile).
+
+| Swim | Metres | Min | Alternatives | Levels |
+|------|--------|-----|--------------|--------|
+| [swim-easy-1500](endurance/swim-easy-1500.md) | 1500 | 35 | run-easy-5-6, end-ride-50 | any |
+| [swim-drills-1800](endurance/swim-drills-1800.md) | 1800 | 40 | end-ride-50, run-easy-6-8 | any |
+| [swim-steady-2000](endurance/swim-steady-2000.md) | 2000 | 45 | end-ride-60, run-easy-6-8 | any |
+| [swim-steady-2500](endurance/swim-steady-2500.md) | 2500 | 55 | end-ride-60, run-easy-8-10 | Normal, Push |
+
+Swims need a `pool` and are pushed as notes. Each is a warm-up, drills, a main set by distance and feel (easy RPE 3–4/10, steady 5/10) and a cool-down. There are no swim Ladders yet.
 
 ### Strength, PT, recovery, test
 
@@ -124,9 +135,13 @@ Runs are at easy pace (`{easy_run_pace}` from the Athlete Profile).
    - Normal: 45–60′.
    - Push: 45–70′, with one long run (`run-easy-10-12`) on the long day.
 
+   Endurance swims:
+   - Light: 1500–2000 m.
+   - Normal and Push: 1800–2500 m (`swim-steady-2500` is Normal or Push only).
+
    **Extension:** in a Push week, at most one Quality ride may get 10–15′ extra at Endurance (68%) before its cooldown, written `+<minutes>` after its ID in the Plan table (`th-2 +15`). Use it now and then, when the athlete is fresh, never in a Light or Normal week, and never on the FTP test. Quality Workouts otherwise keep the length their Ladder step gives them.
 
-   If `alternatives: on`, every Endurance Session names an Alternative of similar effort in another tiered sport, which you can swap in on the day.
+   If `alternatives: on`, every Endurance Session names an Alternative of similar effort in another tiered sport, which you can swap in on the day. `push-week` offers the first Alternative on the Workout's list that the profile can use. Where the Week Template names one (`ride (alt: swim)`), pick a Workout whose first usable Alternative is that sport: the 50′ rides offer a swim first, the other rides and the runs offer a run or ride first and a swim after it.
 5. **Endurance variety:** never the same Workout twice in one week. Prefer a different Workout from the one on the same day last week.
 6. **Strength:** only if strength is tiered. Strength Sessions cycle A → B → C, and Add-ons cycle core → upper → posterior, each continuing from last week. Skip a Workout whose Equipment the profile lacks; if none in a cycle fits, it's a gap.
 7. **Tests:** each sport's test resets its Ladder targets. When due (about 6 weeks since that sport's last test, and the previous week was Light), it replaces the week's first Quality Session of that sport. After it, drop a step on that sport's Ladders, and bring it forward when a top step is done (rule 2).

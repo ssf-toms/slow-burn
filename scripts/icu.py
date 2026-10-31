@@ -249,6 +249,12 @@ def needed_equipment(w):
             if not (t == SMART_TRAINER and w["delivery"] == "workout")]
 
 
+def alternatives_of(w):
+    """A Workout's `alternative`, one ID or a list in order of preference."""
+    alt = w.get("alternative") or []
+    return [alt] if isinstance(alt, str) else alt
+
+
 def note_event(name, description, date, external_id):
     when = f"{date}T00:00:00"
     return dict(category="NOTE", name=name, description=description,
@@ -352,8 +358,9 @@ def build_events(fm, days, bank, profile):
                 and all(t in equipment for t in needed_equipment(alt)))
 
     def alternative_line(w):
-        alt = bank.get(w.get("alternative"))
-        return f"\n\nAlternative: {alt['name']}. {description(alt)}" if offered(alt) else ""
+        """The first of the Workout's Alternatives the profile can use, if any."""
+        alt = next((bank[a] for a in alternatives_of(w) if offered(bank.get(a))), None)
+        return f"\n\nAlternative: {alt['name']}. {description(alt)}" if alt else ""
 
     def combined(workouts):
         return (" + ".join(w["name"] for w in workouts),

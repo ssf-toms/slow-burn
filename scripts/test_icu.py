@@ -80,12 +80,29 @@ class BankFrontmatter(unittest.TestCase):
         self.assertEqual(self.bank["run-easy-6-8"]["equipment"], [])
         self.assertEqual(self.bank["pt"]["equipment"], [])
 
-    def test_endurance_rides_and_runs_name_an_alternative_in_the_bank(self):
+    def test_endurance_rides_runs_and_swims_name_alternatives_in_other_sports(self):
         for wid, w in self.bank.items():
-            if w["kind"] == "endurance" and w["sport"] in ("ride", "run"):
+            if w["kind"] == "endurance" and w["sport"] in ("ride", "run", "swim"):
                 with self.subTest(workout=wid):
                     self.assertNotIn("run_alternative", w)
-                    self.assertIn(w.get("alternative"), self.bank)
+                    alts = icu.alternatives_of(w)
+                    self.assertTrue(alts)
+                    for a in alts:
+                        self.assertIn(a, self.bank)
+                        self.assertNotEqual(self.bank[a]["sport"], w["sport"])
+
+    def test_every_workout_is_a_known_sport(self):
+        sports = {"ride", "run", "swim", "walk", "strength", "pt"}
+        for wid, w in self.bank.items():
+            with self.subTest(workout=wid):
+                self.assertIn(w["sport"], sports)
+
+    def test_swims_need_a_pool_and_are_notes(self):
+        swims = [w for w in self.bank.values() if w["sport"] == "swim"]
+        self.assertGreaterEqual(len(swims), 3)
+        for w in swims:
+            with self.subTest(workout=w["id"]):
+                self.assertEqual((w["equipment"], w["delivery"]), (["pool"], "note"))
 
     def test_run_workouts_use_the_pace_placeholder(self):
         for wid in ("run-easy-6-8", "run-easy-8-10", "run-easy-10-12"):
@@ -219,6 +236,11 @@ class ProfileChecks(unittest.TestCase):
         problems = self.problems(example_profile(), {"Tue": ("Test", "ftp-ramp-test, test-spin")})
         self.assertIn("Tue: ftp-ramp-test needs smart-trainer (not in the profile's equipment)", problems)
 
+    def test_a_swim_needs_a_pool(self):
+        no_pool = example_profile().replace(", pool,", ",")
+        problems = self.problems(no_pool, {"Sat": ("Endurance", "swim-easy-1500")})
+        self.assertEqual(problems, ["Sat: swim-easy-1500 needs pool (not in the profile's equipment)"])
+
     def test_allowed_pairing_passes_in_either_order(self):
         for workouts in ("pt, str-a", "str-a, pt"):
             with self.subTest(workouts=workouts):
@@ -281,6 +303,11 @@ class PushedEvents(unittest.TestCase):
         self.assertIn("4:50/km", e["description"])
         self.assertNotIn("{threshold_run_pace}", e["description"])
 
+    def test_swim_is_pushed_as_a_note(self):
+        e = event(self.events(example_profile(), {"Sat": ("Endurance", "swim-steady-2000")}), "Sat")
+        self.assertEqual((e["category"], e["name"]), ("NOTE", "Steady swim 2000 m"))
+        self.assertIn("Main set", e["description"])
+
     def test_dose_for_the_week_level_is_appended(self):
         bank = icu.load_bank()
         bank["pt"] = {**bank["pt"], "dose": {"light": "2 rounds", "normal": "3 rounds", "push": "4 rounds"}}
@@ -323,6 +350,20 @@ class PushedEvents(unittest.TestCase):
         self.assertEqual(e["category"], "NOTE")
         self.assertIn("Alternative: Endurance 60.", e["description"])
         self.assertNotIn("swap this for", e["description"])
+
+    def test_triathletes_light_ride_offers_a_swim_alternative(self):
+        e = event(self.events(example_profile(), {"Fri": ("Endurance", "end-ride-50")}, "light"), "Fri")
+        self.assertIn("Alternative: Easy swim 1500 m.", e["description"])
+        self.assertNotIn("Alternative: Easy run", e["description"])
+
+    def test_first_alternative_the_profile_can_use_is_offered(self):
+        e = event(self.events(INDOOR_PROFILE, {"Fri": ("Endurance", "end-ride-50")}, "light"), "Fri")
+        self.assertIn("Alternative: Easy run 6–8 km.", e["description"])
+        self.assertNotIn("swim", e["description"])
+
+    def test_swim_offers_its_first_alternative_that_fits(self):
+        e = event(self.events(example_profile(), {"Sat": ("Endurance", "swim-easy-1500")}), "Sat")
+        self.assertIn("Alternative: Easy run 5–6 km.", e["description"])
 
     def test_run_alternative_line_only_when_alternatives_are_on(self):
         off = example_profile().replace("alternatives: on\n", "")

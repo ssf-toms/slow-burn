@@ -5,7 +5,7 @@ kind: endurance
 sport: run
 duration_min: 68
 variant_group: endurance-run
-alternative: end-ride-75
+alternative: [end-ride-75, swim-steady-2500]
 levels: [push]
 equipment: []
 delivery: note
@@ -15,4 +15,4 @@ delivery: note
 
 Easy pace ({easy_run_pace}). The long run of a Push week. Take water if it's over 60 min.
 
-Alternative: swap this for [end-ride-75](../endurance/end-ride-75.md) on the day.
+Alternative: swap this for [end-ride-75](../endurance/end-ride-75.md) or [swim-steady-2500](../endurance/swim-steady-2500.md) on the day.

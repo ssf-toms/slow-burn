@@ -40,7 +40,7 @@ Why this Level, what life looks like this week, any Load Warning and how it was 
 ## Review
 
 - Rides (intervals.icu): count, total time, anything notable
-- Reported: runs, PT, walks you mentioned
+- Reported: runs, swims, PT, walks you mentioned
 - Ladders: th-2 at 6/10 → climb · ss-2 at 8/10 → repeat
 - How the week felt
 
@@ -68,13 +68,13 @@ Why this Level, what life looks like this week, any Load Warning and how it was 
   - `✓ 6` a Quality Session done, with its effort (1–10)
   - `~` partly done
   - `✗` missed
-  - `↔ run` an Endurance ride swapped for its run alternative
+  - `↔ run` an Endurance Session swapped for its Alternative, naming the sport (`↔ run`, `↔ swim`, `↔ ride`)
 
 **Adjustments.** One dated line per change. The Plan table is edited to match, so it always shows the current plan, and this list records every change.
 
 **Review.** Filled at the next Check-in:
 - rides come from intervals.icu (completion and time);
-- runs, PT and walks are what you report;
+- runs, swims, PT and walks are what you report;
 - the effort for each Quality Session is asked for then.
 
 **Next.** The state carried into the following Check-in:
