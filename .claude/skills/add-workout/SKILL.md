@@ -11,7 +11,7 @@ Speak in the terms from `GLOSSARY.md`. Read these before step 1:
 - `athlete/profile.md`: the Tiers, Places and their Equipment, Notes (injuries, gaps) and Week Templates. If it's missing, stop and tell the user to run `/setup`.
 - `docs/adr/0005-personal-workouts-layer.md`: why Personal files exist and what they may close
 
-The Workout Bank is the Core Bank (`bank/`) plus the athlete's Personal files (`athlete/bank/exercises/` and `athlete/bank/workouts/`). Ask the user's decisions with the AskUserQuestion tool, recommended option first. The client is `scripts/icu.py`. Run it from the repo root.
+The Workout Bank is the Core Bank (`bank/`) plus the athlete's Personal files (`athlete/bank/exercises/` and `athlete/bank/workouts/`). Ask the user's decisions with the AskUserQuestion tool, recommended option first. The client is `scripts/icu.py`. Run it from the repo root as `python3 scripts/icu.py <command>`. If `python3` isn't found (usual on Windows), use `py` instead, and keep using it for the rest of the session.
 
 ## 1. Understand what they want
 
@@ -43,7 +43,7 @@ The Workout Bank is the Core Bank (`bank/`) plus the athlete's Personal files (`
 ## 4. Save and validate
 
 1. Write each approved file: Exercises to `athlete/bank/exercises/<id>.md`, Workouts to `athlete/bank/workouts/<id>.md`. The folder is what makes a file an Exercise: `icu.py` reads every file in `exercises/` as an Exercise and every other file as a Workout, so an Exercise saved anywhere else fails `check-bank` with "Exercises go in exercises/".
-2. Run `./scripts/icu.py check-bank`. It names the file and the problem for any failure. Fix the file and run it again until it prints `Workout Bank OK` listing the new IDs.
+2. Run `python3 scripts/icu.py check-bank`. It names the file and the problem for any failure. Fix the file and run it again until it prints `Workout Bank OK` listing the new IDs.
 3. If it closes a gap in the profile's Notes, update that line in `athlete/profile.md` to name the Personal file.
 4. Commit in the athlete repo (`git -C athlete`) as "Add Personal <Exercise|Workout>: <id>".
 
