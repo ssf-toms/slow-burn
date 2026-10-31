@@ -1,8 +1,8 @@
 # Week Records
 
-One file per week, `weeks/<ISO week>.md` (e.g. `2026-W44.md`), covering Monday to Sunday. The Check-in writes it for the coming week. The Review section is filled in at the following Check-in. Adjustments are appended as they happen. Terms follow `GLOSSARY.md`.
+One file per week, `athlete/weeks/<ISO week>.md` (e.g. `2026-W44.md`), covering Monday to Sunday. The Check-in writes it for the coming week. The Review section is filled in at the following Check-in. Adjustments are appended as they happen. Terms follow `GLOSSARY.md`.
 
-`weeks/` is ignored by the main repo and is its own git repo, so your log stays private. `examples/2026-W44.md` shows a completed Record.
+`athlete/` is ignored by the main repo and is its own git repo, so your log stays private. It holds your Athlete Profile (`athlete/profile.md`, see `docs/athlete-profile.md`) and the Week Records in `athlete/weeks/`. `examples/2026-W44.md` shows a completed Record.
 
 ## Format
 
@@ -31,7 +31,7 @@ ftp: 240
 
 ## Reasoning
 
-Why this Level, what life looks like this week, and any Load Warning and how it was answered.
+Why this Level, what life looks like this week, any Load Warning and how it was answered, and any change to the Athlete Profile since last week.
 
 ## Adjustments
 
@@ -46,7 +46,7 @@ Why this Level, what life looks like this week, and any Load Warning and how it 
 
 ## Next
 
-- Ladders: ss-2 · th-3 · vo2-2 · Tue → vo2max
+- Ladders: ride: ss-2 · th-3 · vo2-2 · Tue → vo2max
 - Strength → str-b · Add-on → addon-upper
 - Last FTP test: 2026-10-20
 ```
@@ -78,9 +78,13 @@ Why this Level, what life looks like this week, and any Load Warning and how it 
 - the effort for each Quality Session is asked for then.
 
 **Next.** The state carried into the following Check-in:
-- the current step on each Ladder, after applying the climb rules in `bank/README.md`;
-- which Ladder Tuesday uses next;
-- the next Strength and Add-on in each cycle;
-- the date of the last FTP test.
+- the current step on each Ladder, grouped by sport (`ride: ss-2 · th-3 · vo2-2`), after applying the climb rules in `bank/README.md`;
+- which Ladder the rotating Quality slot uses next (the first Quality day for the maintainer: `Tue → vo2max`);
+- the next Strength and Add-on in each cycle. This line is only present when `strength` is tiered;
+- the date of the last FTP test, when ride is Primary.
 
-Before the first Record exists, start from the starting steps in `bank/README.md` (ss-2, th-2, vo2-2), Tuesday → threshold, str-a, addon-core, and last FTP test unknown (asked at the first Check-in).
+**Profile changes.** When the Athlete Profile changes (new Equipment, a Sport Tier moved, regenerated Week Templates), say so in that week's Reasoning, so the log explains why the plan's shape changed.
+
+**Older Records.** Records written before the Athlete Profile existed stay as they are. A Monday row such as `Recovery | pt, str-a` is valid history, and the Load Warning rules only read `level`.
+
+Before the first Record exists, start from the starting steps in `bank/README.md` (set by `experience` in the Athlete Profile; `some` gives ss-2, th-2, vo2-2), the rotating Quality slot on its first Ladder (threshold for the maintainer), str-a and addon-core if strength is tiered, and last FTP test unknown (asked at the first Check-in).
