@@ -4,24 +4,46 @@ A personal system for planning a week of training ahead of time: indoor/outdoor 
 
 ## Language
 
+### Athlete
+
+**Athlete Profile**:
+The lasting description of the person being planned for: their Sport Tiers, Equipment, experience, availability, easy run pace, whether they have a PT routine, and their FTP and heart-rate numbers. Their Week Templates are generated from it.
+_Avoid_: Settings, config, user
+
+**Sport Tier**:
+How much an activity counts in the Athlete Profile. Every activity has a Tier, including strength and PT, so a profile can be just PT and home strength. **Primary** activities get the most Sessions, and a Quality slot each where they have Ladders. **Secondary** activities get steady, easy volume. **Occasional** activities appear as an Alternative or a single Session. More than one activity can be Primary.
+_Avoid_: Weight, priority, percentage
+
+**Equipment**:
+The kit the athlete has access to, as a flat list (for example bodyweight, bands, kettlebell, dumbbells, gym, smart trainer, pool). A Workout can be planned only if the athlete has all the Equipment it needs.
+_Avoid_: Gear, kit, setup
+
+**Setup**:
+The one-time conversation that builds the Athlete Profile, approves the Week Templates, and connects intervals.icu. It can be run again to change the profile.
+_Avoid_: Onboarding, wizard, install
+
 ### Workouts
 
 **Workout**:
 A reusable definition of a training activity (structure, targets, instructions) kept in the Workout Bank. A Session is a Workout placed on a day.
 _Avoid_: Session (when meaning the definition), template, routine
 
+**Dose**:
+How much of a Workout is done at a given Week Level: rounds or exercises for strength and PT, minutes for an Endurance ride. The Workout states its Dose for each Level.
+_Avoid_: Volume, size, amount
+
 **Workout Bank**:
 The small curated set of Workouts that every Week Plan draws from.
 _Avoid_: Library, catalogue, database
 
 **Ladder**:
-An ordered sequence of Workouts of one Quality type, each slightly harder than the last. You move up a step after completing the current one at an effort of 7/10 or below.
+An ordered sequence of Workouts of one Quality type in one sport, each slightly harder than the last. You move up a step after completing the current one at an effort of 7/10 or below.
 _Avoid_: Progression, plan, series
 
 ### Days and sessions
 
 **Session**:
-The main planned activity for a day. A day has exactly one Session, optionally followed by a Strength Add-on.
+The main planned activity for a day. A day has exactly one Session, optionally followed by a Strength Add-on. A Session can combine Workouts (such as PT then strength) only if the athlete chose that pairing in their Athlete Profile.
 _Avoid_: Workout (when meaning the scheduled thing), activity, training
 
 **Quality Session**:
@@ -32,8 +54,12 @@ _Avoid_: Hard workout, intervals day, key session
 A ride or run held at easy, Zone 2 intensity.
 _Avoid_: Base ride, easy ride, Z2
 
+**Alternative**:
+A Workout of similar effort in another sport, named next to an Endurance Session so it can be swapped in on the day. Whether Alternatives are offered is the athlete's choice.
+_Avoid_: Backup, substitute, option
+
 **Strength Session**:
-A kettlebell and/or resistance-band session that stands as a day's Session, usually combined with a PT Session on a Recovery Day.
+A resistance session (bodyweight, bands, weights) that stands as a day's Session. It is a training day, never a Recovery Day.
 _Avoid_: Gym, lifting, conditioning
 
 **Strength Add-on**:
@@ -49,7 +75,7 @@ The ~30 min physical-therapy routine, done for maintenance.
 _Avoid_: Mobility, rehab, stretching
 
 **Recovery Day**:
-A day whose Session is a PT Session, a Strength Session (alone or combined with PT), or a walk. Never on the bike. One to three per week, depending on the Week Level.
+A day whose Session is a PT Session, a walk, or full rest. Every other day is a training day.
 _Avoid_: Rest day, off day
 
 ### Planning
@@ -59,11 +85,11 @@ The seven Sessions chosen for one upcoming week, decided before the week starts.
 _Avoid_: Schedule, program, block
 
 **Week Template**:
-The fixed Mon–Sun pattern of Session kinds that every Week Plan starts from, adjusted by the Week Level.
+The Mon–Sun pattern of Session kinds that every Week Plan starts from. There is one for each Week Level, generated from the Athlete Profile and approved at Setup.
 _Avoid_: Default week, pattern
 
 **Week Level**:
-How hard a Week Plan is meant to be, chosen at the Check-in. Levels scale mainly by how many cardio days the week has, not by session length: **Light** (0–1 Quality Sessions, 3 Recovery Days), **Normal** (2 Quality Sessions, 2 Recovery Days), **Push** (2 Quality Sessions, 1 Recovery Day).
+How hard a Week Plan is meant to be, chosen at the Check-in. A Level sets two things: how many of the athlete's available days are training days, and the Dose of each Workout. **Push** uses every available day, **Normal** one fewer, **Light** two fewer, and the remaining days are Recovery Days, always at least one. Light has at most one Quality Session.
 _Avoid_: Intensity, difficulty, load
 
 **Check-in**:
