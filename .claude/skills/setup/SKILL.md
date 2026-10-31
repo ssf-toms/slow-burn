@@ -9,7 +9,7 @@ Speak in the terms from `GLOSSARY.md`. Read these before step 1:
 
 - `docs/athlete-profile.md`: the profile format, which fields to ask and when, and the template cell syntax
 - `docs/planning-rules.md`: the rules for generating Week Templates
-- `bank/README.md`: the Workout frontmatter and the Index
+- `bank/README.md`: the Workout frontmatter, the Personal part and the Index
 
 `examples/profile.md` and `examples/profile-home.md` are two finished profiles to model yours on.
 
@@ -43,16 +43,17 @@ Ask in the order of the Fields table in `docs/athlete-profile.md`, and skip each
 
 ## 3. Bank gaps
 
-1. Run `grep -H '^sport:\|^kind:\|^ladder:\|^equipment:\|^delivery:' bank/*/*.md`.
+1. Run `grep -rH '^sport:\|^kind:\|^ladder:\|^equipment:\|^delivery:' bank athlete/bank --include='*.md'`. Files under `athlete/bank/` are the athlete's Personal Workouts and Exercises, and serve a slot like Core ones.
 2. For each tiered activity, list what the Bank can't serve:
    - a tiered activity with no Workout of that `sport`;
    - a Primary ride, run or swim with no Ladders, which gets no Quality slot (today, swim);
    - Workouts whose `equipment` has a tag the profile lacks. `smart-trainer` on a `delivery: workout` ride doesn't count: the ride is pushed as outdoor instead. On a `delivery: note` Workout it does count (the FTP test, if ride is Primary);
    - Add-ons only if ride, run or swim is tiered, because an Add-on follows an Endurance Session.
-   - Strength is served by Exercises, not Workouts: run `grep -H '^pattern:\|^equipment:' bank/exercises/*.md`. It's a gap only for a pattern (squat, hinge, push, pull, carry, core) with no Exercise the profile's Equipment fits.
-3. Tell the user each gap in a line, that the Check-in will flag it whenever a slot can't be filled, and that it's never filled with an invented Workout.
+   - Strength is served by Exercises, not Workouts: run `grep -rH '^pattern:\|^equipment:' bank/exercises athlete/bank/exercises`. It's a gap only for a pattern (squat, hinge, push, pull, carry, core) with no Exercise the profile's Equipment fits.
+3. Tell the user each gap in a line. For each one a Personal Workout or Exercise could close (their own routine, a machine at their gym), offer `/add-workout` for it. Run it now if they accept, then re-check that gap.
+4. List the gaps that remain for the profile's Notes, and tell the user the Check-in will flag them whenever a slot can't be filled. A gap is closed only by a Personal file that passed `/add-workout`.
 
-**Done when** every tiered activity is either servable or has its gaps listed.
+**Done when** every tiered activity is servable, by Core or Personal files, or has its remaining gaps listed.
 
 ## 4. Week Templates
 

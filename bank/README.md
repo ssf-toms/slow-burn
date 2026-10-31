@@ -1,6 +1,6 @@
 # Workout Bank
 
-The curated set of Workouts and Exercises every Week Plan draws from (see `GLOSSARY.md`). There's one file per Workout, and one per Exercise in `exercises/`. The frontmatter holds the fields the Check-in uses to pick Workouts. Ride bodies hold an `intervals` block (intervals.icu workout text) that is pushed to intervals.icu and synced to MyWhoosh.
+The curated set of Workouts and Exercises every Week Plan draws from (see `GLOSSARY.md`), plus the athlete's Personal ones (below). There's one file per Workout, and one per Exercise in `exercises/`. The frontmatter holds the fields the Check-in uses to pick Workouts. Ride bodies hold an `intervals` block (intervals.icu workout text) that is pushed to intervals.icu and synced to MyWhoosh.
 
 Ride targets are **%FTP** with simple steps and repeats, and no ramps or cadence targets (ADR 0001). Example watts at FTP 240:
 
@@ -63,6 +63,32 @@ Hold the bell at your chest and sit down between your heels, 3 s on the way down
 
 Progress: more reps (up to 15), then a 2 s pause at the bottom.
 ```
+
+## Personal Workouts and Exercises
+
+This folder is the **Core Bank**. The athlete's own **Personal Workouts and Exercises** live in their athlete repo, in the same file format: Exercises in `athlete/bank/exercises/`, Workouts in `athlete/bank/workouts/` (ADR 0005). `icu.py` loads both parts as one Workout Bank. They share one ID namespace, and an ID in both parts is an error, never an override. Add one with `/add-workout`.
+
+Every Bank file, Core or Personal, must pass the mechanical checks, or `icu.py` refuses to load the Bank and names the file. Run `./scripts/icu.py check-bank` to check them:
+- the required fields are present: `id`, `name`, `kind`, `sport`, `duration_min`, `equipment` and `delivery` for a Workout; `id`, `name`, `pattern`, `equipment` and exactly one of `reps` or `hold` for an Exercise;
+- `kind`, `sport`, `pattern` and `delivery` take the values in the tables above, and every `equipment` tag is a known one;
+- `id` is the file name;
+- a `delivery: workout` file has an `intervals` block, and a `quality` Workout has `ladder` and `step`;
+- every `alternative` is in the Bank.
+
+## Principles checklist
+
+Apply it, out loud, whenever a Workout or Exercise is added, Core or Personal. Fix whatever fails, or explain why it stands.
+
+- Its kind, sport and Equipment are honest: it needs exactly what it lists.
+- Rides use %FTP, simple steps and repeats, and no ramps or cadence (ADR 0001). Runs use the pace placeholders (`{easy_run_pace}`, `{threshold_run_pace}`) plus RPE.
+- Quality Workouts sit on a Ladder step, and are only planned as Quality.
+- Strength and mobility Exercises have one pattern, a cue and a `Progress:` line.
+- Nothing is meant to be paired with a Quality Session.
+- It's safe for the athlete's stated injuries and Notes.
+- It's foundational and functional rather than novel. For Core files: widely applicable.
+- Its length fits the Level ranges (picking rule 4), or it has `levels` set.
+
+`other` activities skip the checklist: their content isn't the athlete's to define, so they stay in the profile's `other`.
 
 ## Index
 

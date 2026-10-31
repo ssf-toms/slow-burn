@@ -1,6 +1,6 @@
 # Athlete Profile
 
-The lasting description of the person being planned for (see `GLOSSARY.md`). Setup writes it and the Check-in and Adjustment skills read it. It lives at `athlete/profile.md` in the private `athlete/` repo, next to `athlete/weeks/`. `examples/profile.md` and `examples/profile-home.md` show two complete, invented profiles.
+The lasting description of the person being planned for (see `GLOSSARY.md`). Setup writes it and the Check-in and Adjustment skills read it. It lives at `athlete/profile.md` in the private `athlete/` repo, next to `athlete/weeks/` and the Personal Workouts and Exercises in `athlete/bank/`. `examples/profile.md` and `examples/profile-home.md` show two complete, invented profiles.
 
 The frontmatter holds the structured fields. The body holds the approved Week Templates and free notes. The templates are generated from the fields at Setup and only change when Setup is run again (ADR 0003). The rules for generating them are in `docs/planning-rules.md`.
 
@@ -97,4 +97,4 @@ The template doesn't name Workouts or Ladders. The Check-in picks them with the 
 
 ## Notes
 
-Anything else, in free text, under `## Notes`: goals, injuries, preferences, and the **gaps** Setup found, such as a tiered sport with no Workouts in the Bank, or Workouts that need Equipment the athlete doesn't have. Gaps are listed, never filled with invented Workouts.
+Anything else, in free text, under `## Notes`: goals, injuries, preferences, and the **gaps** Setup found, such as a tiered sport with no Workouts in the Bank, or Workouts that need Equipment the athlete doesn't have. Gaps are listed, and closed only by a checked Personal Workout or Exercise, added with `/add-workout`.

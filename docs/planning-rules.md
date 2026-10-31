@@ -25,7 +25,7 @@ The same rules hold for every template:
 - **One Session a day.** A Strength Add-on is the only thing that can follow it, and only after an Endurance Session or a Test Session's easy spin. It needs `strength` tiered.
 - **Pairings:** a Session combines Workouts (such as PT then strength) only if the pair is in `pairings`. Nothing is ever paired with a Quality Session.
 - **Alternatives:** if `alternatives: on`, every Endurance Session names an Alternative in another tiered sport, so you can swap on the day.
-- **Equipment:** a Workout can be planned only if every tag it needs is in `equipment` (the one exception, `smart-trainer` on a structured ride, is in `docs/athlete-profile.md`). A slot the Bank can't fill is listed as a gap in the profile's Notes, never filled with an invented Workout.
+- **Equipment:** a Workout can be planned only if every tag it needs is in `equipment` (the one exception, `smart-trainer` on a structured ride, is in `docs/athlete-profile.md`). A slot the Bank can't fill is listed as a gap in the profile's Notes, and closed only by a checked Personal Workout or Exercise (`/add-workout`).
 - **Real life wins.** If the user names a one-off constraint (a busy day, travel), move Sessions around it within the Adjustment rules below rather than forcing the template. A lasting change means re-running Setup.
 
 ### Worked example
@@ -72,5 +72,5 @@ When a Week Plan changes mid-week:
 - **Endurance Sessions** swap freely: to their Alternative (if `alternatives: on`), or between days.
 - **Recovery Days** stay in the week. They are PT, a walk, rest, or a recovery-type `other` activity. When a day is lost, an Endurance Session gives way first.
 - **One Session a day** still holds.
-- **No Workout to fill a Session:** if a moved or swapped Session has no Workout the profile can fill (missing Equipment, or a gap in the Bank such as no outdoor FTP test), flag it to the user. Never invent a Workout.
+- **No Workout to fill a Session:** if a moved or swapped Session has no Workout the profile can fill (missing Equipment, or a gap in the Bank such as no outdoor FTP test), flag it to the user. Fill it only from the Workout Bank, Core or Personal; a new Personal Workout goes through `/add-workout` first.
 - **Illness:** each sick day becomes a Recovery row with an empty Workout (rest). The first day back is Endurance or a walk, never Quality. If symptoms are above the neck only (a cold) and mild, a walk is fine.
