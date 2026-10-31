@@ -179,6 +179,19 @@ class ExampleProfileWeeks(unittest.TestCase):
         athlete_dir(self, example_profile("profile-home.md"))
         self.assertIn("dry run: 8 to upsert", dry_run(EXAMPLES / "profile-home-2026-W45.md"))
 
+    def test_triathlete_normal_week_with_a_run_ladder_step_and_run_alternative(self):
+        athlete_dir(self, example_profile("profile.md"))
+        path = week(self, {"Mon": ("Recovery", ""), "Tue": ("Quality", "th-2"),
+                           "Wed": ("Endurance", "end-ride-60"), "Thu": ("Quality", "run-th-2"),
+                           "Fri": ("Recovery", ""), "Sun": ("Endurance", "run-easy-8-10")})
+        self.assertIn("dry run: 6 to upsert", dry_run(path))
+
+    def test_run_test_day_passes_for_the_triathlete(self):
+        athlete_dir(self, example_profile("profile.md"))
+        events, problems = build(week(self, {"Thu": ("Test", "run-test-20")}))
+        self.assertEqual(problems, [])
+        self.assertIn("4:50/km", event(events, "Thu")["description"])
+
     def test_dumbbell_only_athlete_cannot_do_str_a(self):
         athlete_dir(self, example_profile("profile-home.md"))
         path = week(self, {"Mon": ("Strength", "pt, str-a")})

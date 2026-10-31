@@ -9,13 +9,14 @@ Every Week Plan starts from the Week Template for its Week Level. The templates 
 Apply these rules in order:
 
 1. **Training days:** Push has `availability.days_per_week` training days, Normal one fewer, Light two fewer. Every other day is a Recovery Day: PT, a walk, rest, or a recovery-type `other` activity. There's always at least one Recovery Day.
-2. **Quality slots:** Normal and Push get two Quality Sessions, Light at most one. They go only to Primary sports that have Ladders (today, only `ride`). With one such sport, it gets both slots. With two, one each. With three, the slots rotate week to week. With none, there are no Quality Sessions and the training days are Endurance, Strength or `Other`.
+2. **Quality slots:** Normal and Push get two Quality Sessions, Light at most one. They go only to Primary sports that have Ladders (`ride` and `run`). With one such sport, it gets both slots. With two, one each, and Light's one slot alternates between them, Light week to Light week. With three, the slots rotate week to week. With none, there are no Quality Sessions and the training days are Endurance, Strength or `Other`.
 3. **Tier counts:** each Primary activity is on at least 2 training days a week, each Secondary on 1–2, and each Occasional on at most 1, or only as an Alternative. A Strength Add-on counts as a strength day. For the Recovery activities (PT and walk), a Primary or Secondary Tier is met on Recovery Days as well as training days: PT on a Recovery Day counts toward its 2 or 1–2 days. If the training days can't hold every Primary at 2 and every Secondary at 1 (as in a short Light week), the Primaries keep their days and a Secondary that doesn't fit becomes a named Alternative. Judgement fills the remaining days, and the athlete approves the result.
 4. **Spacing:** Quality Sessions are never on consecutive days. Strength has no spacing rules of its own.
 5. **Fixed days:** the days in `availability.fixed` are placed first, before any other rule fills the week.
 6. **Dose:** the template sets the Session kind, and the Level sets each Workout's Dose. The Endurance ride length is the first case of this: a range for each Level (50–60′ in Light, 60–75′ in Normal with at most one 75′ ride, 60–75′ in Push with at least one), plus an optional Extension of one Push Quality ride (picking rule 4 in `bank/README.md`).
 7. **Conditional parts:**
-   - The FTP test is planned only if ride is Primary.
+   - The FTP test is planned only if ride is Primary, and the run test only if run is Primary.
+   - Setup asks for `experience` only if ride or run is Primary, and for `threshold_run_pace` only if run is Primary.
    - Load Warning rules 3 and 4 apply only if ride is Primary or Secondary (not Occasional). Otherwise use rules 1 and 2 plus judgement.
    - Setup asks for FTP and heart rate only if ride is tiered.
    - The MyWhoosh steps apply only if `equipment` includes `smart-trainer`.

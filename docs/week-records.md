@@ -81,7 +81,7 @@ Why this Level, what life looks like this week, any Load Warning and how it was 
 - the current step on each Ladder, grouped by sport (`ride: ss-2 · th-3 · vo2-2`), after applying the climb rules in `bank/README.md`;
 - which Ladder the rotating Quality slot uses next (the first Quality day for the maintainer: `Tue → vo2max`);
 - the next Strength and Add-on in each cycle. This line is only present when `strength` is tiered;
-- the date of the last FTP test, when ride is Primary.
+- the date of the last FTP test, when ride is Primary, and of the last run test, when run is Primary.
 
 **Profile changes.** When the Athlete Profile changes (new Equipment, a Sport Tier moved, regenerated Week Templates), say so in that week's Reasoning, so the Records explain why the plan's shape changed.
 

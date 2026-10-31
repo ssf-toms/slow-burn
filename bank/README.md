@@ -28,11 +28,17 @@ Ride targets are **%FTP** with simple steps and repeats, and no ramps or cadence
 | `alternative` | Workout `id` | Optional. The Alternative of similar effort, in another sport, offered next to this Endurance Workout. The body ends with a matching `Alternative: swap this for …` line, which is not pushed. |
 | `dose` | `{light: "...", normal: "...", push: "..."}` | Optional. The Workout's Dose at each Week Level, for example rounds for strength. Not set on any Workout yet. |
 
-Run Workouts write their pace as `{easy_run_pace}`, which is filled from the Athlete Profile when they're pushed.
+Run Workouts write their pace as `{easy_run_pace}` or `{threshold_run_pace}`, filled from the Athlete Profile when they're pushed. Run Quality targets are threshold pace plus an offset, with an RPE alongside for hills, wind and bad days:
+
+| Run zone | Pace | RPE |
+|----------|------|-----|
+| Tempo | `{threshold_run_pace}` +15–20 s/km | 6/10 |
+| Threshold | `{threshold_run_pace}` ±5 s/km | 7–8/10 |
+| VO2max | `{threshold_run_pace}` −10–15 s/km | 8–9/10 |
 
 ## Index
 
-### Quality: Ladders (bike only)
+### Quality: ride Ladders
 
 | Step | Sweet Spot | Threshold | VO2max |
 |------|------------|-----------|--------|
@@ -41,6 +47,19 @@ Run Workouts write their pace as `{easy_run_pace}`, which is filled from the Ath
 | 3 | [ss-3](quality/ss-3.md) 3×12′ @ 90% · 66′ | [th-3](quality/th-3.md) 3×10′ @ 97% · 66′ | [vo2-3](quality/vo2-3.md) 6×3′ @ 112% · 61′ |
 | 4 | [ss-4](quality/ss-4.md) 2×18′ @ 90% · 64′ | [th-4](quality/th-4.md) 2×20′ @ 95% · 73′ | [vo2-4](quality/vo2-4.md) 5×4′ @ 110% · 60′ |
 | 5 | [ss-5](quality/ss-5.md) 2×20′ @ 92% · 68′ | | |
+
+### Quality: run Ladders
+
+Pushed as notes. Each has a 15′ easy warm-up with strides and a 10′ easy cool-down. Run Tempo plays Sweet Spot's role in the picking rules.
+
+| Step | Tempo | Threshold | VO2max |
+|------|-------|-----------|--------|
+| 1 | [run-tempo-1](quality/run-tempo-1.md) 3×6′ · 47′ | [run-th-1](quality/run-th-1.md) 4×5′ · 51′ | [run-vo2-1](quality/run-vo2-1.md) 6×2′ · 47′ |
+| 2 | [run-tempo-2](quality/run-tempo-2.md) 3×8′ · 53′ | [run-th-2](quality/run-th-2.md) 3×8′ · 53′ | [run-vo2-2](quality/run-vo2-2.md) 5×3′ · 52′ |
+| 3 | [run-tempo-3](quality/run-tempo-3.md) 2×12′ · 52′ | [run-th-3](quality/run-th-3.md) 3×10′ · 61′ | [run-vo2-3](quality/run-vo2-3.md) 6×3′ · 58′ |
+| 4 | [run-tempo-4](quality/run-tempo-4.md) 2×15′ · 58′ | [run-th-4](quality/run-th-4.md) 2×15′ · 58′ | [run-vo2-4](quality/run-vo2-4.md) 5×4′ · 57′ |
+
+**Run test:** [run-test-20](test/run-test-20.md), a 20′ time trial (about 50′ with warm-up and cool-down). Its average pace is the new `threshold_run_pace`.
 
 ### Endurance
 
@@ -53,14 +72,18 @@ Run Workouts write their pace as `{easy_run_pace}`, which is filled from the Ath
 | [end-ride-60-rolling](endurance/end-ride-60-rolling.md) | 60 | run-easy-8-10 | any |
 | [end-ride-60-steps](endurance/end-ride-60-steps.md) | 60 | run-easy-8-10 | any |
 | [end-ride-60-openers](endurance/end-ride-60-openers.md) | 60 | run-easy-strides | any |
-| [end-ride-75](endurance/end-ride-75.md) | 75 | run-easy-10-12 | Normal, Push |
+| [end-ride-75](endurance/end-ride-75.md) | 75 | run-easy-8-10 | Normal, Push |
 | [end-ride-75-progressive](endurance/end-ride-75-progressive.md) | 75 | run-easy-10-12 | Push |
 
-Runs (easy pace, `{easy_run_pace}` from the Athlete Profile):
-- [run-easy-6-8](endurance/run-easy-6-8.md), ~45′
-- [run-easy-8-10](endurance/run-easy-8-10.md), ~55′
-- [run-easy-10-12](endurance/run-easy-10-12.md), ~68′, Normal and Push weeks only
-- [run-easy-strides](endurance/run-easy-strides.md), ~48′
+| Run | Min | Alternative | Levels |
+|-----|-----|-------------|--------|
+| [run-easy-5-6](endurance/run-easy-5-6.md) | 38 | end-ride-50 | any |
+| [run-easy-6-8](endurance/run-easy-6-8.md) | 45 | end-ride-50 | any |
+| [run-easy-strides](endurance/run-easy-strides.md) | 48 | end-ride-50-rolling | any |
+| [run-easy-8-10](endurance/run-easy-8-10.md) | 55 | end-ride-60 | any |
+| [run-easy-10-12](endurance/run-easy-10-12.md) | 68 | end-ride-75 | Push (the long run) |
+
+Runs are at easy pace (`{easy_run_pace}` from the Athlete Profile).
 
 ### Strength, PT, recovery, test
 
@@ -78,27 +101,35 @@ Runs (easy pace, `{easy_run_pace}` from the Athlete Profile):
 
 ## Picking rules (used by the Check-in)
 
-1. **Quality pairing:** applies to each Primary sport that has Ladders (today, only ride), using the Quality slots the Week Template gives it (generation rule 2 in `docs/planning-rules.md`):
+1. **Quality pairing:** applies to each Primary sport that has Ladders (ride and run), using the Quality slots the Week Template gives it (generation rule 2 in `docs/planning-rules.md`):
    - **Two slots** (the only such sport): the first Quality day of the week alternates week to week between the **Threshold** and **VO2max** Ladders. The second is always **Sweet Spot**. In the maintainer's template that's Tuesday and Thursday.
    - **One slot** (two or three such sports): the slot rotates week to week, Sweet Spot → Threshold → VO2max.
    - **Light week:** the one Quality slot is either Endurance or one Sweet Spot Workout a step *below* your current step.
+   - **Run:** run Tempo plays Sweet Spot's role, so a run's two-slot pattern is Threshold or VO2max, then Tempo; its one-slot rotation is Tempo → Threshold → VO2max; and a Light run slot is Endurance or a Tempo step below.
 2. **Climbing:**
    - Completed at an effort of 7/10 or below: next step.
    - 8/10, or one rep cut short: repeat the same step.
    - Two failed attempts in a row: drop a step.
    - After a Light week: stay on the same step.
-   - After an FTP retest: drop one step on every Ladder, because the targets just got harder.
-   - Top step completed at 7/10 or below: hold there and bring the next FTP test forward.
-3. **Starting steps:** set by `experience`, on every Ladder of each Primary sport that has Ladders: `new` starts at step 1, `some` at step 2 (ss-2, th-2, vo2-2), and `experienced` at step 3. If the starting step feels too hard, drop a step using rule 2.
+   - After a retest (the FTP test for ride, the run test for run): drop one step on every Ladder of that sport, because the targets just got harder.
+   - Top step completed at 7/10 or below: hold there and bring that sport's next test forward.
+3. **Starting steps:** set by `experience`, on every Ladder of each Primary sport that has Ladders: `new` starts at step 1, `some` at step 2 (ss-2, th-2, vo2-2 for ride; run-tempo-2, run-th-2, run-vo2-2 for run), and `experienced` at step 3. This applies to run as it does to ride. If the starting step feels too hard, drop a step using rule 2.
 4. **Dose by Level:** the Level picks each Workout's Dose. Endurance ride length is the first case of Dose. Each Level sets a range, not a fixed length, so vary the lengths within it, week to week and by how the athlete feels:
    - Light: 50–60′ rides.
    - Normal: 60–75′, with at most one 75′ ride (`end-ride-75`, on the template's long day, Saturday for the maintainer).
    - Push: 60–75′, with at least one 75′ ride on the long day. Either 75′ ride may be used, and both in one week.
+
+   Endurance runs:
+   - Light: 35–45′ runs.
+   - Normal: 45–60′.
+   - Push: 45–70′, with one long run (`run-easy-10-12`) on the long day.
 
    **Extension:** in a Push week, at most one Quality ride may get 10–15′ extra at Endurance (68%) before its cooldown, written `+<minutes>` after its ID in the Plan table (`th-2 +15`). Use it now and then, when the athlete is fresh, never in a Light or Normal week, and never on the FTP test. Quality Workouts otherwise keep the length their Ladder step gives them.
 
    If `alternatives: on`, every Endurance Session names an Alternative of similar effort in another tiered sport, which you can swap in on the day.
 5. **Endurance variety:** never the same Workout twice in one week. Prefer a different Workout from the one on the same day last week.
 6. **Strength:** only if strength is tiered. Strength Sessions cycle A → B → C, and Add-ons cycle core → upper → posterior, each continuing from last week. Skip a Workout whose Equipment the profile lacks; if none in a cycle fits, it's a gap.
-7. **FTP test:** only if ride is Primary. When due (about 6 weeks since the last test, and the previous week was Light), it replaces the week's first ride Quality Session. A Test row is `ftp-ramp-test, test-spin`, optionally with an Add-on, and comes to about 60–75′.
+7. **Tests:** each sport's test resets its Ladder targets. When due (about 6 weeks since that sport's last test, and the previous week was Light), it replaces the week's first Quality Session of that sport. After it, drop a step on that sport's Ladders, and bring it forward when a top step is done (rule 2).
+   - **FTP test:** only if ride is Primary. A Test row is `ftp-ramp-test, test-spin`, optionally with an Add-on, and comes to about 60–75′.
+   - **Run test:** only if run is Primary. A Test row is `run-test-20` alone, about 50′. Not in the same week as the FTP test.
 8. **Walk:** for Recovery Days the template gives a walk, or as a stand-in on the day for any Session when you're too tired. Never a recovery ride.
