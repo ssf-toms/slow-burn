@@ -35,7 +35,7 @@ def athlete_dir(test, profile_text):
 
 def with_pt(test, profile_text):
     """athlete_dir() plus the maintainer-style PT routine as a Personal mobility Workout."""
-    return personal(test, {"pt.md": PT_ROUTINE}, profile_text)
+    return personal(test, {"workouts/pt.md": PT_ROUTINE}, profile_text)
 
 
 def example_profile(name="profile.md"):
@@ -104,6 +104,10 @@ class BankFrontmatter(unittest.TestCase):
                 with self.subTest(kit=kit, pattern=pattern):
                     self.assertTrue(any(e["pattern"] == pattern and e["equipment"] == [kit]
                                         for e in self.bank.values() if e["kind"] == "exercise"))
+
+    def test_exercises_take_their_sport_from_their_pattern(self):
+        self.assertEqual(self.bank["hip-90-90"]["sport"], "mobility")
+        self.assertEqual(self.bank["kb-goblet-squat"]["sport"], "strength")
 
     def test_mobility_exercises_compose_a_session_from_bodyweight_alone_with_some_for_bands(self):
         mobility = [e for e in self.bank.values() if e.get("pattern") == "mobility"]
@@ -780,11 +784,11 @@ class PersonalBank(unittest.TestCase):
         self.assertIn("The loop up the hill", e["description"])
 
     def test_an_id_in_both_core_and_personal_is_rejected_naming_both_files(self):
-        d = personal(self, {"rec-walk.md": HILL_WALK.replace("hill-walk", "rec-walk")})
+        d = personal(self, {"workouts/rec-walk.md": HILL_WALK.replace("hill-walk", "rec-walk")})
         with self.assertRaises(icu.BankError) as cm:
             icu.load_bank()
         self.assertIn(f"duplicate Bank ID rec-walk: Core {ROOT / 'bank/recovery/rec-walk.md'} "
-                      f"and Personal {d / 'bank/rec-walk.md'}", str(cm.exception))
+                      f"and Personal {d / 'bank/workouts/rec-walk.md'}", str(cm.exception))
 
     def test_a_malformed_personal_file_is_rejected_with_its_path(self):
         d = personal(self, {"workouts/hill-walk.md": HILL_WALK.replace("kind: recovery\n", "")})
@@ -819,7 +823,7 @@ class PersonalBank(unittest.TestCase):
             ("exercises/leg-press.md", LEG_PRESS.replace('reps: "10"\n', ""),
              "needs exactly one of reps or hold"),
             ("exercises/leg-press.md", LEG_PRESS.replace("name: ", "title: "), "missing name"),
-            ("hill-walk.md", HILL_WALK.replace("---\n", "", 1), "missing frontmatter"),
+            ("workouts/hill-walk.md", HILL_WALK.replace("---\n", "", 1), "missing frontmatter"),
         ]
         for rel, text, problem in cases:
             with self.subTest(problem=problem):
@@ -859,26 +863,36 @@ class PersonalBank(unittest.TestCase):
         self.assertRegex(out.getvalue(), r"^Workout Bank OK: \d+ Core, 2 Personal \(hill-walk, leg-press\)\n$")
 
     def test_a_bad_personal_file_stops_push_week_naming_it(self):
-        d = personal(self, {"hill-walk.md": HILL_WALK.replace("sport: walk", "sport: hiking")})
+        d = personal(self, {"workouts/hill-walk.md": HILL_WALK.replace("sport: walk", "sport: hiking")})
         path = week(self, {"Sun": ("Recovery", "rec-walk")})
         with self.assertRaises(SystemExit) as cm:
             icu.main(["icu.py", "push-week", str(path), "--dry-run"])
-        self.assertIn(f"Workout Bank problem: Personal {d / 'bank/hill-walk.md'}: unknown sport 'hiking'",
+        self.assertIn(f"Workout Bank problem: Personal {d / 'bank/workouts/hill-walk.md'}: unknown sport 'hiking'",
                       str(cm.exception))
 
     def test_a_personal_mobility_workout_passes_check_bank(self):
-        personal(self, {"pt.md": PT_ROUTINE})
+        personal(self, {"workouts/pt.md": PT_ROUTINE})
         w = icu.load_bank()["pt"]
         self.assertEqual((w["kind"], w["sport"], w["origin"]), ("mobility", "mobility", "personal"))
 
     def test_the_old_pt_kind_is_rejected(self):
-        d = personal(self, {"pt.md": PT_ROUTINE.replace("kind: mobility", "kind: pt")})
-        with self.assertRaisesRegex(icu.BankError, f"Personal {d / 'bank/pt.md'}: unknown kind 'pt'"):
+        d = personal(self, {"workouts/pt.md": PT_ROUTINE.replace("kind: mobility", "kind: pt")})
+        with self.assertRaisesRegex(icu.BankError, f"Personal {d / 'bank/workouts/pt.md'}: unknown kind 'pt'"):
             icu.load_bank()
 
     def test_core_entries_are_marked_core(self):
         personal(self, {})
         self.assertEqual(icu.load_bank()["rec-walk"]["origin"], "core")
+
+    def test_an_exercise_outside_exercises_is_told_where_exercises_go(self):
+        d = personal(self, {"workouts/leg-press.md": LEG_PRESS})
+        with self.assertRaises(icu.BankError) as cm:
+            icu.load_bank()
+        self.assertIn(f"Personal {d / 'bank/workouts/leg-press.md'}: has a pattern, so it's an "
+                      "Exercise: Exercises go in exercises/", str(cm.exception))
+        self.assertNotIn("missing kind", str(cm.exception))
+
+
 TWO_PLACES = """---
 tiers:
   ride: secondary
@@ -946,6 +960,54 @@ class Places(unittest.TestCase):
         athlete_dir(self, flat)
         with self.assertRaisesRegex(icu.ProfileError, "`equipment` is now `places`"):
             build(week(self, {"Tue": ("Quality", "th-2")}))
+
+
+# Like the maintainer's real profile: one home Place, mobility Primary, PT a Personal mobility Workout.
+MAINTAINER_PROFILE = """---
+tiers:
+  ride: primary
+  mobility: primary
+  strength: secondary
+  run: occasional
+  walk: occasional
+other: []
+places:
+  home: [smart-trainer, kettlebell, bands, bodyweight]
+experience: some
+availability:
+  days_per_week: 6
+  fixed: {}
+easy_run_pace: "5:30–6:30/km"
+pairings: [mobility+strength]
+alternatives: on
+ftp: 241
+setup:
+  sync_verified: yes
+  strava_connected: no
+---
+"""
+
+
+class MaintainerWeek(unittest.TestCase):
+    """A Normal week from the maintainer's Week Template, with every kind of Mobility Session."""
+    def test_a_normal_week_with_pt_composed_strength_and_mobility_passes(self):
+        with_pt(self, MAINTAINER_PROFILE)
+        path = week(self, {
+            "Mon": ("Strength", "pt, kb-goblet-squat, kb-swing, push-up, band-pull-apart, "
+                                "kb-suitcase-carry, dead-bug"),
+            "Tue": ("Quality", "th-2"),
+            "Wed": ("Endurance", "end-ride-60", "kb-halo, band-bent-over-row, glute-bridge"),
+            "Thu": ("Quality", "ss-2"),
+            "Fri": ("Recovery", "pt, couch-stretch, open-book"),
+            "Sat": ("Endurance", "end-ride-75"),
+            "Sun": ("Recovery", HOME_MOBILITY)})
+        out = dry_run(path)
+        self.assertIn("dry run: 10 to upsert", out)
+        for line in ("2026-11-02  NOTE    PT routine + Strength (3 rounds)",
+                     "2026-11-04  NOTE    Add-on (3 rounds)",
+                     "2026-11-06  NOTE    PT routine + Mobility (2 rounds)",
+                     "2026-11-08  NOTE    Mobility (2 rounds)"):
+            self.assertIn(line, out)
 
 
 class UsageTest(unittest.TestCase):

@@ -222,7 +222,8 @@ def day_place(d, profile):
 def load_exercise(fm, body):
     """An Exercise (bank/exercises/, ADR 0004): pushed only inside a composed note."""
     cue = re.sub(r"\n?Progress:.*", "", body.strip(), flags=re.S).strip()
-    return {**fm, "kind": "exercise", "sport": "strength", "delivery": "note",
+    sport = MOBILITY if fm["pattern"] == MOBILITY else "strength"
+    return {**fm, "kind": "exercise", "sport": sport, "delivery": "note",
             "cue": " ".join(cue.split()), "prose": body.strip()}
 
 
@@ -240,6 +241,8 @@ def label(origin):
 
 def file_problems(fm, body, exercise):
     """The mechanical checks on one Bank file's frontmatter (ADR 0005)."""
+    if not exercise and "pattern" in fm:
+        return ["has a pattern, so it's an Exercise: Exercises go in exercises/"]
     required = EXERCISE_FIELDS if exercise else WORKOUT_FIELDS
     problems = [f"missing {f}" for f in required if f not in fm]
     if exercise and ("reps" in fm) == ("hold" in fm):
@@ -414,7 +417,7 @@ def composed_note(exercises, level, label=None):
         how = "resting 60–90 s between rounds"
     lines = [f"- {e['name']} × {e.get('reps') or e.get('hold')}: {e['cue']}" for e in exercises]
     return dict(id="+".join(e["id"] for e in exercises), name=f"{label} ({rounds} rounds)",
-                sport=MOBILITY if mobility else "strength", delivery="note", equipment=[],
+                sport=exercises[0]["sport"], delivery="note", equipment=[],
                 prose=f"{rounds} rounds, {how}.\n\n" + "\n".join(lines))
 
 
