@@ -41,7 +41,7 @@ An invented example: a triathlete who rides outdoors (no smart trainer), runs, s
 | Sun | Endurance: run | Endurance: run | Endurance: run |
 
 How the rules in `docs/planning-rules.md` were applied:
-- **Training days:** 4 (Light), 5 (Normal) and 6 (Push). Monday is a fixed rest day. Walks and PT aren't tiered, so every Recovery Day is rest.
+- **Training days:** 4 (Light), 5 (Normal) and 6 (Push). Monday is a fixed rest day. Walks and mobility aren't tiered, so every Recovery Day is rest.
 - **Quality:** ride and run are both Primary with Ladders, so each gets one slot: ride on Tuesday and run on Thursday, never consecutive. Light keeps one, on Tuesday, alternating between ride and run Light week to Light week; Wednesday is then the other sport, so both keep 2 days.
 - **Tiers:** ride and run, both Primary, have at least 2 days at every Level. Swim, Secondary, has 1. Strength, Occasional, is one Add-on in Normal and Push.
 - **Light:** four days can't hold two Primaries at 2 days each plus a swim, so swim is the named Alternative on Friday instead.

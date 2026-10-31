@@ -21,11 +21,11 @@ ftp: 240
 
 | Day | Date  | Session   | Workout                                                        | Add-on                 | Done  |
 |-----|-------|-----------|----------------------------------------------------------------|------------------------|-------|
-| Mon | 10-26 | Strength  | pt, kb-goblet-squat, kb-swing, push-up, band-row, dead-bug     |                        |       |
+| Mon | 10-26 | Strength  | physio, kb-goblet-squat, kb-swing, push-up, band-row, dead-bug |                        |       |
 | Tue | 10-27 | Quality   | th-2                                                           |                        |       |
 | Wed | 10-28 | Endurance | end-ride-60                                                    | kb-suitcase-carry, bird-dog |  |
 | Thu | 10-29 | Quality   | ss-2                                                           |                        |       |
-| Fri | 10-30 | Recovery  | pt                                                             |                        |       |
+| Fri | 10-30 | Recovery  | cat-cow, hip-90-90, open-book, couch-stretch, wall-slide, calf-stretch |        |       |
 | Sat | 10-31 | Endurance | end-ride-60-steps                                              |                        |       |
 | Sun | 11-01 | Endurance | end-ride-60-rolling                                            |                        |       |
 
@@ -40,7 +40,7 @@ Why this Level, what life looks like this week, any Load Warning and how it was 
 ## Review
 
 - Rides (intervals.icu): count, total time, anything notable
-- Reported: runs, swims, PT, walks you mentioned
+- Reported: runs, swims, strength, mobility, walks you mentioned
 - Ladders: th-2 at 6/10 → climb · ss-2 at 8/10 → repeat
 - How the week felt
 
@@ -60,7 +60,7 @@ Why this Level, what life looks like this week, any Load Warning and how it was 
 
 **Plan table.** The client script parses this table, so keep the columns in this order.
 - `Session`: `Recovery` | `Quality` | `Endurance` | `Strength` | `Other` | `Test`. `Strength` and `Other` come from the Week Template's cells of those kinds (`docs/athlete-profile.md`). It ends in ` @<place>` when the day isn't at the default Place (`Strength @gym`), copied from the template cell. The Equipment checks and whether a ride is pushed as indoor use that Place; an unknown Place is an error.
-- `Workout`: one or more Bank IDs separated by commas, in the order done (`pt, kb-goblet-squat, kb-swing, push-up, band-row, dead-bug`). Consecutive Exercise IDs form one composed block, pushed as one note "Strength (N rounds)" with the rounds from `level` (picking rule 6 in `bank/README.md`). So a Workout and a composed block can be paired (`pt, …` above is a PT + strength pairing). In a Push week, one Quality ride may carry an Extension, `+<minutes>` after its ID (`th-2 +15`): 10–15 extra minutes at Endurance before the cooldown (picking rule 4 in `bank/README.md`). Leave it empty on a `Recovery` row for a full rest day, such as illness. In a partial week (a Week Record started mid-week), leave both `Session` and `Workout` empty on the unplanned days.
+- `Workout`: one or more Bank IDs separated by commas, in the order done (`physio, kb-goblet-squat, kb-swing, push-up, band-row, dead-bug`). Consecutive Exercise IDs form one composed block, pushed as one note "Strength (N rounds)" with the rounds from `level` (picking rule 6 in `bank/README.md`), or "Mobility (2 rounds)" for `mobility` Exercises (picking rule 9). Mobility and strength Exercises are always separate blocks. So a Workout and a composed block can be paired (`physio, …` above is the athlete's Personal mobility Workout, `athlete/bank/physio.md`, then strength), and a mobility Workout followed by 2–3 mobility Exercises is one Mobility Session. In a Push week, one Quality ride may carry an Extension, `+<minutes>` after its ID (`th-2 +15`): 10–15 extra minutes at Endurance before the cooldown (picking rule 4 in `bank/README.md`). Leave it empty on a `Recovery` row for a full rest day, such as illness. In a partial week (a Week Record started mid-week), leave both `Session` and `Workout` empty on the unplanned days.
 - `Add-on`: empty, or the IDs of 2–4 Exercises separated by commas (`kb-suitcase-carry, bird-dog`), pushed as one note "Add-on (N rounds)". Only allowed on Endurance and Test rows.
 - `Done`, filled at the Review:
   - `✓` done
@@ -73,7 +73,7 @@ Why this Level, what life looks like this week, any Load Warning and how it was 
 
 **Review.** Filled at the next Check-in:
 - rides come from intervals.icu (completion and time);
-- runs, swims, PT and walks are what you report;
+- runs, swims, strength, mobility and walks are what you report;
 - the effort for each Quality Session is asked for then.
 
 **Next.** The state carried into the following Check-in:
@@ -83,6 +83,6 @@ Why this Level, what life looks like this week, any Load Warning and how it was 
 
 **Profile changes.** When the Athlete Profile changes (new Equipment, a Sport Tier moved, regenerated Week Templates), say so in that week's Reasoning, so the Records explain why the plan's shape changed.
 
-**Older Records.** Records written before the Athlete Profile existed stay as they are. So do Records naming the retired strength IDs (`str-a`, `addon-core`, …): they're history, not pushed again, and `bank/README.md` maps each to its Exercises. A Monday row such as `Recovery | pt, str-a` stays as written, and the Load Warning rules only read `level`.
+**Older Records.** Records written before the Athlete Profile existed stay as they are. So do Records naming the retired strength IDs (`str-a`, `addon-core`, …) or the retired Core PT Workout: they're history, not pushed again, and `bank/README.md` maps each to its replacement. A Monday row such as `Recovery | pt, str-a` stays as written, and the Load Warning rules only read `level`.
 
 Before the first Record exists, start from the starting steps in `bank/README.md` (set by `experience` in the Athlete Profile; `some` gives ss-2, th-2, vo2-2), the rotating Quality slot on its first Ladder (threshold for the maintainer), and last FTP test unknown (asked at the first Check-in).
