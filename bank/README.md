@@ -1,6 +1,6 @@
 # Workout Bank
 
-The curated set of Workouts and Exercises every Week Plan draws from (see `GLOSSARY.md`). There's one file per Workout, and one per Exercise in `exercises/`. The frontmatter holds the fields the Check-in uses to pick Workouts. Ride bodies hold an `intervals` block (intervals.icu workout text) that is pushed to intervals.icu and synced to MyWhoosh.
+The curated set of Workouts and Exercises every Week Plan draws from (see `GLOSSARY.md`), plus the athlete's Personal ones (below). There's one file per Workout, and one per Exercise in `exercises/`. The frontmatter holds the fields the Check-in uses to pick Workouts. Ride bodies hold an `intervals` block (intervals.icu workout text) that is pushed to intervals.icu and synced to MyWhoosh.
 
 Ride targets are **%FTP** with simple steps and repeats, and no ramps or cadence targets (ADR 0001). Example watts at FTP 240:
 
@@ -20,7 +20,7 @@ Ride targets are **%FTP** with simple steps and repeats, and no ramps or cadence
 | `kind` | `quality` \| `endurance` \| `pt` \| `recovery` \| `test` | What the Workout is for. |
 | `sport` | `ride` \| `run` \| `swim` \| `walk` \| `strength` \| `pt` | The activity. |
 | `duration_min` | number | Typical length in minutes. |
-| `equipment` | list of tags, `[]` for none | The Equipment the Workout needs, from the tags in `docs/athlete-profile.md` (`bodyweight`, `bands`, `band-anchor`, `kettlebell`, `dumbbells`, `barbell`, `bench`, `cable`, `pull-up-bar`, `smart-trainer`, `pool`, `hr-strap`). It can only be planned on a day whose Place has every tag. The one exception: `smart-trainer` on a `delivery: workout` ride only decides whether it's pushed as indoor or outdoor, so the ride can be planned without one. Required in every file. |
+| `equipment` | list of tags, `[]` for none | The Equipment the Workout needs, from the tags in `docs/athlete-profile.md` (`bodyweight`, `bands`, `band-anchor`, `kettlebell`, `dumbbells`, `barbell`, `bench`, `cable`, `pull-up-bar`, `machines`, `smart-trainer`, `pool`, `hr-strap`). It can only be planned on a day whose Place has every tag. The one exception: `smart-trainer` on a `delivery: workout` ride only decides whether it's pushed as indoor or outdoor, so the ride can be planned without one. Required in every file. |
 | `delivery` | `workout` \| `note` | `workout` is pushed as a structured workout (rides). `note` is a calendar note. |
 | `ladder`, `step` | Ladder name, number | Quality Workouts only: which Ladder, and which step on it. |
 | `variant_group` | string | Workouts that rotate with each other (Endurance rides, runs). |
@@ -45,7 +45,7 @@ A single strength or mobility movement (ADR 0004). Strength Sessions and Strengt
 | `id` | lowercase, dashes | The name used in Week Records. Same as the file name. |
 | `name` | string | How the move is listed in the pushed note. |
 | `pattern` | `squat` \| `hinge` \| `push` \| `pull` \| `carry` \| `core` \| `mobility` | The movement pattern, for balancing the week (picking rule 6). |
-| `equipment` | list of tags | As for Workouts: every tag must be in the profile's `equipment`. Band moves that need a door or post to pull against also carry `band-anchor`. |
+| `equipment` | list of tags | As for Workouts: every tag must be at the day's Place. Band moves that need a door or post to pull against also carry `band-anchor`. |
 | `reps` or `hold` | string, e.g. `"10"`, `"8/side"`, `"30 s"` | The amount per round. Exactly one of the two. |
 
 The body is one or two cue lines, then a `Progress:` line. The cue is pushed next to the move. The Progress line is for the athlete and the Check-in, and isn't pushed.
@@ -63,6 +63,32 @@ Hold the bell at your chest and sit down between your heels, 3 s on the way down
 
 Progress: more reps (up to 15), then a 2 s pause at the bottom.
 ```
+
+## Personal Workouts and Exercises
+
+This folder is the **Core Bank**. The athlete's own **Personal Workouts and Exercises** live in their athlete repo, in the same file format: Exercises in `athlete/bank/exercises/`, Workouts in `athlete/bank/workouts/` (ADR 0005). `icu.py` loads both parts as one Workout Bank. They share one ID namespace, and an ID in both parts is an error, never an override. Add one with `/add-workout`.
+
+Every Bank file, Core or Personal, must pass the mechanical checks, or `icu.py` refuses to load the Bank and names the file. Run `./scripts/icu.py check-bank` to check them:
+- the required fields are present: `id`, `name`, `kind`, `sport`, `duration_min`, `equipment` and `delivery` for a Workout; `id`, `name`, `pattern`, `equipment` and exactly one of `reps` or `hold` for an Exercise;
+- `kind`, `sport`, `pattern` and `delivery` take the values in the tables above, and every `equipment` tag is a known one;
+- `id` is the file name;
+- a `delivery: workout` file has an `intervals` block, and a `quality` Workout has `ladder` and `step`;
+- every `alternative` is in the Bank.
+
+## Principles checklist
+
+Apply it, out loud, whenever a Workout or Exercise is added, Core or Personal. Fix whatever fails, or explain why it stands.
+
+- Its kind, sport and Equipment are honest: it needs exactly what it lists.
+- Rides use %FTP, simple steps and repeats, and no ramps or cadence (ADR 0001). Runs use the pace placeholders (`{easy_run_pace}`, `{threshold_run_pace}`) plus RPE.
+- Quality Workouts sit on a Ladder step, and are only planned as Quality.
+- Strength and mobility Exercises have one pattern, a cue and a `Progress:` line.
+- Nothing is meant to be paired with a Quality Session.
+- It's safe for the athlete's stated injuries and Notes.
+- It's foundational and functional rather than novel. For Core files: widely applicable.
+- Its length fits the Level ranges (picking rule 4), or it has `levels` set.
+
+`other` activities skip the checklist: their content isn't the athlete's to define, so they stay in the profile's `other`.
 
 ## Index
 

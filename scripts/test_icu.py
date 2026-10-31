@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 EXAMPLE_WEEK = ROOT / "examples" / "2026-W44.md"
 EXAMPLES = ROOT / "examples"
 EQUIPMENT_TAGS = {"bodyweight", "bands", "band-anchor", "kettlebell", "dumbbells", "barbell",
-                  "bench", "cable", "pull-up-bar", "smart-trainer", "pool", "hr-strap"}
+                  "bench", "cable", "pull-up-bar", "machines", "smart-trainer", "pool", "hr-strap"}
 PATTERNS = {"squat", "hinge", "push", "pull", "carry", "core", "mobility"}
 
 
@@ -68,6 +68,7 @@ class AthleteProfile(unittest.TestCase):
 
 class BankFrontmatter(unittest.TestCase):
     def setUp(self):
+        athlete_dir(self, None)  # the Core Bank alone, whatever is in athlete/bank/
         self.bank = icu.load_bank()
 
     def test_exercises_load_with_their_pattern_and_cue(self):
@@ -582,6 +583,145 @@ class SetupCommands(unittest.TestCase):
         self.assertEqual(out, "deleted event 4242\n")
 
 
+HILL_WALK = """---
+id: hill-walk
+name: Hill walk
+kind: recovery
+sport: walk
+duration_min: 50
+equipment: []
+delivery: note
+---
+
+# Hill walk
+
+The loop up the hill behind the house, at a pace you could talk at.
+"""
+
+
+LEG_PRESS = """---
+id: leg-press
+name: "Leg press (machine)"
+pattern: squat
+equipment: [machines]
+reps: "10"
+---
+
+Feet hip-width on the plate, lower until your knees are at 90°, then press without locking out.
+
+Progress: add a plate once all rounds feel smooth at 12 reps.
+"""
+
+
+def personal(test, files, profile=INDOOR_PROFILE):
+    """An athlete dir whose bank/ holds `files`, a map of relative path to text."""
+    d = athlete_dir(test, profile)
+    for rel, text in files.items():
+        (d / "bank" / rel).parent.mkdir(parents=True, exist_ok=True)
+        (d / "bank" / rel).write_text(text)
+    return d
+
+
+class PersonalBank(unittest.TestCase):
+    def test_a_personal_workout_is_planned_and_pushed(self):
+        personal(self, {"workouts/hill-walk.md": HILL_WALK})
+        self.assertEqual(icu.load_bank()["hill-walk"]["origin"], "personal")
+        path = week(self, {"Sun": ("Recovery", "hill-walk")})
+        out = dry_run(path)
+        self.assertIn("2026-11-08  NOTE    Hill walk", out)
+        e = event(build(path)[0], "Sun")
+        self.assertIn("The loop up the hill", e["description"])
+
+    def test_an_id_in_both_core_and_personal_is_rejected_naming_both_files(self):
+        d = personal(self, {"rec-walk.md": HILL_WALK.replace("hill-walk", "rec-walk")})
+        with self.assertRaises(icu.BankError) as cm:
+            icu.load_bank()
+        self.assertIn(f"duplicate Bank ID rec-walk: Core {ROOT / 'bank/recovery/rec-walk.md'} "
+                      f"and Personal {d / 'bank/rec-walk.md'}", str(cm.exception))
+
+    def test_a_malformed_personal_file_is_rejected_with_its_path(self):
+        d = personal(self, {"workouts/hill-walk.md": HILL_WALK.replace("kind: recovery\n", "")})
+        with self.assertRaises(icu.BankError) as cm:
+            icu.load_bank()
+        self.assertIn(f"Personal {d / 'bank/workouts/hill-walk.md'}: missing kind", str(cm.exception))
+
+    def test_each_mechanical_check_rejects_a_personal_file(self):
+        ride = ("---\nid: my-ride\nname: My ride\nkind: endurance\nsport: ride\nduration_min: 60\n"
+                "equipment: [smart-trainer]\ndelivery: workout\n---\n\n# My ride\n\n"
+                "```intervals\n- 60m 65%\n```\n")
+        cases = [
+            ("workouts/hill-walk.md", HILL_WALK.replace("kind: recovery", "kind: hike"),
+             "unknown kind 'hike'"),
+            ("workouts/hill-walk.md", HILL_WALK.replace("sport: walk", "sport: hiking"),
+             "unknown sport 'hiking'"),
+            ("workouts/hill-walk.md", HILL_WALK.replace("delivery: note", "delivery: email"),
+             "unknown delivery 'email'"),
+            ("workouts/hill-walk.md", HILL_WALK.replace("equipment: []", "equipment: [poles]"),
+             "unknown equipment tag 'poles'"),
+            ("workouts/hill-walk.md", HILL_WALK.replace("equipment: []\n", ""), "missing equipment"),
+            ("workouts/hill-walk.md", HILL_WALK.replace("id: hill-walk", "id: hillwalk"),
+             "id hillwalk doesn't match the file name hill-walk.md"),
+            ("workouts/my-ride.md", ride.replace("```intervals\n- 60m 65%\n```\n", "Ride an hour.\n"),
+             "delivery: workout needs an ```intervals block"),
+            ("workouts/my-ride.md", ride.replace("kind: endurance", "kind: quality"),
+             "a quality Workout needs ladder"),
+            ("workouts/my-ride.md", ride.replace("delivery:", "alternative: run-easy-99\ndelivery:"),
+             "alternative run-easy-99 is not in the Bank"),
+            ("exercises/leg-press.md", LEG_PRESS.replace("pattern: squat", "pattern: legs"),
+             "unknown pattern 'legs'"),
+            ("exercises/leg-press.md", LEG_PRESS.replace('reps: "10"\n', ""),
+             "needs exactly one of reps or hold"),
+            ("exercises/leg-press.md", LEG_PRESS.replace("name: ", "title: "), "missing name"),
+            ("hill-walk.md", HILL_WALK.replace("---\n", "", 1), "missing frontmatter"),
+        ]
+        for rel, text, problem in cases:
+            with self.subTest(problem=problem):
+                d = personal(self, {rel: text})
+                with self.assertRaises(icu.BankError) as cm:
+                    icu.load_bank()
+                self.assertIn(f"Personal {d / 'bank' / rel}: {problem}", str(cm.exception))
+
+    def test_every_core_file_passes_the_mechanical_checks(self):
+        personal(self, {})
+        bank = icu.load_bank()  # raises on any failure
+        self.assertTrue(all(w["origin"] == "core" for w in bank.values()))
+
+    def gym_profile(self):
+        """TWO_PLACES (defined below) with weight machines at the gym."""
+        return TWO_PLACES.replace("pull-up-bar, bench, smart-trainer]",
+                                  "pull-up-bar, bench, machines, smart-trainer]")
+
+    def test_a_personal_exercise_is_composed_into_a_gym_strength_session(self):
+        personal(self, {"exercises/leg-press.md": LEG_PRESS}, self.gym_profile())
+        path = week(self, {"Wed": ("Strength @gym", "leg-press, deadlift, bench-press, cable-row, "
+                                                    "db-suitcase-carry, hanging-knee-raise")})
+        self.assertIn("2026-11-04  NOTE    Strength (3 rounds)", dry_run(path))
+        self.assertIn("- Leg press (machine) × 10: Feet hip-width on the plate",
+                      event(build(path)[0], "Wed")["description"])
+
+    def test_a_personal_exercise_still_needs_its_equipment_at_the_days_place(self):
+        personal(self, {"exercises/leg-press.md": LEG_PRESS}, self.gym_profile())
+        problems = build(week(self, {"Mon": ("Strength", "leg-press, db-goblet-squat, push-up")}))[1]
+        self.assertIn("Mon: leg-press needs machines (not at home)", problems)
+
+    def test_check_bank_counts_core_and_personal_files(self):
+        personal(self, {"workouts/hill-walk.md": HILL_WALK, "exercises/leg-press.md": LEG_PRESS})
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            icu.main(["icu.py", "check-bank"])
+        self.assertRegex(out.getvalue(), r"^Workout Bank OK: \d+ Core, 2 Personal \(hill-walk, leg-press\)\n$")
+
+    def test_a_bad_personal_file_stops_push_week_naming_it(self):
+        d = personal(self, {"hill-walk.md": HILL_WALK.replace("sport: walk", "sport: hiking")})
+        path = week(self, {"Sun": ("Recovery", "rec-walk")})
+        with self.assertRaises(SystemExit) as cm:
+            icu.main(["icu.py", "push-week", str(path), "--dry-run"])
+        self.assertIn(f"Workout Bank problem: Personal {d / 'bank/hill-walk.md'}: unknown sport 'hiking'",
+                      str(cm.exception))
+
+    def test_core_entries_are_marked_core(self):
+        personal(self, {})
+        self.assertEqual(icu.load_bank()["rec-walk"]["origin"], "core")
 TWO_PLACES = """---
 tiers:
   ride: secondary
