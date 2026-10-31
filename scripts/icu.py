@@ -40,14 +40,18 @@ SMART_TRAINER = "smart-trainer"  # equipment tag
 EXTENSION_MIN = (10, 15)         # allowed Extension minutes, Push Quality rides only
 EXTENSION_PCT = 68               # Endurance (Zone 2) %FTP for Extension minutes
 ROUNDS = {"light": 2, "normal": 3, "push": 4}  # composed strength, by Week Level
-STRENGTH_BLOCK = (3, 8)          # Exercises in a Workout cell's composed block
+MOBILITY = "mobility"            # the Exercise pattern, Workout kind and sport, and tier
+MOBILITY_ROUNDS = 2              # a composed mobility block, at every Level
+STRENGTH_BLOCK = (3, 8)          # Exercises in a Workout cell's composed strength block
+MOBILITY_BLOCK = (6, 8)          # Exercises in a composed Mobility Session
+MOBILITY_TOP_UP = (2, 3)         # mobility Exercises after a whole mobility Workout
 ADD_ON_BLOCK = (2, 4)            # Exercises in an Add-on
 PACES = ("easy_run_pace", "threshold_run_pace")  # profile fields run Workouts write as {field}
 # Bank frontmatter: the fields and values the mechanical checks know (bank/README.md).
 WORKOUT_FIELDS = ("id", "name", "kind", "sport", "duration_min", "equipment", "delivery")
 EXERCISE_FIELDS = ("id", "name", "pattern", "equipment")
-KINDS = {"quality", "endurance", "pt", "recovery", "test"}
-SPORTS = {"ride", "run", "swim", "walk", "strength", "pt"}
+KINDS = {"quality", "endurance", "mobility", "recovery", "test"}
+SPORTS = {"ride", "run", "swim", "walk", "strength", "mobility"}
 DELIVERIES = {"workout", "note"}
 PATTERNS = {"squat", "hinge", "push", "pull", "carry", "core", "mobility"}
 EQUIPMENT_TAGS = {"bodyweight", "bands", "band-anchor", "kettlebell", "dumbbells", "barbell",
@@ -380,42 +384,55 @@ def is_exercise(w):
     return w.get("kind") == "exercise"
 
 
+def is_mobility(w):
+    return is_exercise(w) and w.get("pattern") == MOBILITY
+
+
 def grouped(ids, bank):
-    """A cell's Workouts in order, with each run of consecutive Exercises as one list."""
+    """A cell's Workouts in order, with each run of consecutive Exercises as one list.
+    Mobility and strength Exercises never share a block."""
     out = []
     for w in (bank[i] for i in ids):
         if not is_exercise(w):
             out.append(w)
-        elif out and isinstance(out[-1], list):
+        elif out and isinstance(out[-1], list) and is_mobility(out[-1][0]) == is_mobility(w):
             out[-1].append(w)
         else:
             out.append([w])
     return out
 
 
-def composed_note(label, exercises, level):
-    """One composed block as a note Workout: rounds from the Level (ADR 0004)."""
-    rounds = ROUNDS.get(level, ROUNDS["normal"])
+def composed_note(exercises, level, label=None):
+    """One composed block as a note Workout (ADR 0004). Strength takes its rounds from the
+    Level; a mobility block is slow rounds, the same at every Level."""
+    mobility = all(is_mobility(e) for e in exercises)
+    if mobility:
+        rounds, label = MOBILITY_ROUNDS, label or "Mobility"
+        how = "moving slowly from one to the next, breathing into each hold"
+    else:
+        rounds, label = ROUNDS.get(level, ROUNDS["normal"]), label or "Strength"
+        how = "resting 60–90 s between rounds"
     lines = [f"- {e['name']} × {e.get('reps') or e.get('hold')}: {e['cue']}" for e in exercises]
     return dict(id="+".join(e["id"] for e in exercises), name=f"{label} ({rounds} rounds)",
-                sport="strength", delivery="note", equipment=[],
-                prose=f"{rounds} rounds, resting 60–90 s between rounds.\n\n" + "\n".join(lines))
+                sport=MOBILITY if mobility else "strength", delivery="note", equipment=[],
+                prose=f"{rounds} rounds, {how}.\n\n" + "\n".join(lines))
 
 
-def composed(ids, bank, label, level):
+def composed(ids, bank, level):
     """A cell's Workouts, with each block of Exercises composed into one note."""
-    return [composed_note(label, g, level) if isinstance(g, list) else g
-            for g in grouped(ids, bank)]
+    return [composed_note(g, level) if isinstance(g, list) else g for g in grouped(ids, bank)]
 
 
 def pairing_problem(session, workouts, pairings):
-    if session == "Test" or len(workouts) < 2:
+    # A mobility Workout and a mobility block are one Mobility Session, not a pairing.
+    sports = [w["sport"] for w in workouts]
+    sports = [s for i, s in enumerate(sports) if s != MOBILITY or MOBILITY not in sports[:i]]
+    if session == "Test" or len(sports) < 2:
         return None  # a Test row is the test note plus its spin, not a pairing
     if session == "Quality":
         return "nothing can be paired with a Quality Session"
-    if any(w["sport"] == "other" for w in workouts):
+    if "other" in sports:
         return "other activities can't be paired"
-    sports = [w["sport"] for w in workouts]
     if not any(set(p.split("+")) == set(sports) for p in pairings):
         return (f"{' + '.join(sports)} is not an allowed pairing "
                 f"(profile pairings: {', '.join(pairings) or 'none'})")
@@ -450,7 +467,7 @@ def plan_problems(d, bank, level, profile):
             if "{" + pace + "}" in w["prose"] and not profile.get(pace):
                 problems.append(f"{w['id']} needs {pace} in the profile")
     problems += composition_problems(d, bank)
-    workouts = composed(d["workouts"], bank, "Strength", level)
+    workouts = composed(d["workouts"], bank, level)
     pairing = pairing_problem(d["session"], workouts, profile.get("pairings") or [])
     if pairing:
         problems.append(pairing)
@@ -464,13 +481,21 @@ def plan_problems(d, bank, level, profile):
 def composition_problems(d, bank):
     """Composed strength: block sizes, no repeats, Exercise-only Add-ons (ADR 0004)."""
     problems = []
-    blocks = [g for g in grouped(d["workouts"], bank) if isinstance(g, list)]
-    if len(blocks) > 1:
-        problems.append("a Workout cell has one block of consecutive Exercises")
+    groups = grouped(d["workouts"], bank)
+    blocks = [g for g in groups if isinstance(g, list)]
+    if len(blocks) != len({is_mobility(b[0]) for b in blocks}):
+        problems.append("a Workout cell has one block of consecutive Exercises, "
+                        "or one of strength and one of mobility")
+    routine = any(not isinstance(g, list) and g["sport"] == MOBILITY for g in groups)
     for b in blocks:
-        if not STRENGTH_BLOCK[0] <= len(b) <= STRENGTH_BLOCK[1]:
-            problems.append(f"a Strength block needs {STRENGTH_BLOCK[0]}–{STRENGTH_BLOCK[1]} "
-                            f"Exercises, has {len(b)}")
+        if not is_mobility(b[0]):
+            name, (lo, hi) = "a Strength block", STRENGTH_BLOCK
+        elif routine:  # a whole routine plus a few Exercises: one Mobility Session
+            name, (lo, hi) = "a Mobility block after a mobility Workout", MOBILITY_TOP_UP
+        else:
+            name, (lo, hi) = "a Mobility block", MOBILITY_BLOCK
+        if not lo <= len(b) <= hi:
+            problems.append(f"{name} needs {lo}–{hi} Exercises, has {len(b)}")
     not_exercises = [i for i in d["addon"] if not is_exercise(bank[i])]
     if not_exercises:
         problems.append(f"the Add-on holds Exercises only, not {', '.join(not_exercises)}")
@@ -546,7 +571,7 @@ def build_events(fm, days, bank, profile):
         problems += [f"{d['day']}: {p}" for p in plan_problems(d, bank, level, profile)]
         if any(w not in bank for w in row_ids(d)):
             continue
-        workouts = composed(d["workouts"], bank, "Strength", level)
+        workouts = composed(d["workouts"], bank, level)
         rides = [w for w in workouts if w["delivery"] == "workout"]
         notes = [w for w in workouts if w["delivery"] != "workout"]
         if rides and notes:  # e.g. Test row: MyWhoosh test note + pushed spin
@@ -568,7 +593,7 @@ def build_events(fm, days, bank, profile):
         elif workouts:
             events.append(note_event(*combined(workouts), d["date"], ext(week, d["day"])))
         if d["addon"] and all(is_exercise(bank[i]) for i in d["addon"]):
-            addon = composed_note("Add-on", [bank[i] for i in d["addon"]], level)
+            addon = composed_note([bank[i] for i in d["addon"]], level, "Add-on")
             events.append(note_event(addon["name"], description(addon), d["date"],
                                      ext(week, f"{d['day']}-addon")))
     sunday = days[-1]["date"]

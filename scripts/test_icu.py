@@ -33,6 +33,11 @@ def athlete_dir(test, profile_text):
     return Path(d)
 
 
+def with_pt(test, profile_text):
+    """athlete_dir() plus the maintainer-style PT routine as a Personal mobility Workout."""
+    return personal(test, {"pt.md": PT_ROUTINE}, profile_text)
+
+
 def example_profile(name="profile.md"):
     return (EXAMPLES / name).read_text()
 
@@ -42,9 +47,9 @@ class AthleteProfile(unittest.TestCase):
         athlete_dir(self, example_profile("profile-home.md"))
         p = icu.load_profile()
         self.assertEqual(p["places"], {"home": ["bodyweight", "dumbbells"]})
-        self.assertEqual(p["tiers"], {"pt": "primary", "strength": "secondary", "walk": "occasional"})
+        self.assertEqual(p["tiers"], {"mobility": "primary", "strength": "secondary", "walk": "occasional"})
         self.assertEqual(p["availability"]["fixed"], {"Thu": "other:pilates"})
-        self.assertEqual(p["pairings"], ["pt+strength"])
+        self.assertEqual(p["pairings"], ["mobility+strength"])
         self.assertEqual(p["other"][0], {"id": "pilates", "name": "Pilates class",
                                          "minutes": "45", "counts_as": "training"})
         self.assertEqual(p["setup"], {"sync_verified": "no", "strava_connected": "no"})
@@ -100,6 +105,12 @@ class BankFrontmatter(unittest.TestCase):
                     self.assertTrue(any(e["pattern"] == pattern and e["equipment"] == [kit]
                                         for e in self.bank.values() if e["kind"] == "exercise"))
 
+    def test_mobility_exercises_compose_a_session_from_bodyweight_alone_with_some_for_bands(self):
+        mobility = [e for e in self.bank.values() if e.get("pattern") == "mobility"]
+        bodyweight = [e for e in mobility if e["equipment"] == ["bodyweight"]]
+        self.assertGreaterEqual(len(bodyweight), 12)  # two different 6-Exercise sessions a week
+        self.assertTrue(any("bands" in e["equipment"] for e in mobility))
+
     def test_an_exercise_and_a_workout_cannot_share_an_id(self):
         d = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, d)
@@ -120,7 +131,7 @@ class BankFrontmatter(unittest.TestCase):
     def test_rides_need_a_smart_trainer_and_runs_need_nothing(self):
         self.assertEqual(self.bank["ss-2"]["equipment"], ["smart-trainer"])
         self.assertEqual(self.bank["run-easy-6-8"]["equipment"], [])
-        self.assertEqual(self.bank["pt"]["equipment"], [])
+        self.assertEqual(self.bank["rec-walk"]["equipment"], [])
 
     def test_endurance_rides_runs_and_swims_name_alternatives_in_other_sports(self):
         for wid, w in self.bank.items():
@@ -134,10 +145,14 @@ class BankFrontmatter(unittest.TestCase):
                         self.assertNotEqual(self.bank[a]["sport"], w["sport"])
 
     def test_every_workout_is_a_known_sport(self):
-        sports = {"ride", "run", "swim", "walk", "strength", "pt"}
+        sports = {"ride", "run", "swim", "walk", "strength", "mobility"}
         for wid, w in self.bank.items():
             with self.subTest(workout=wid):
                 self.assertIn(w["sport"], sports)
+
+    def test_no_pt_kind_sport_or_workout_is_left_in_the_core_bank(self):
+        self.assertNotIn("pt", self.bank)
+        self.assertFalse([w for w in self.bank.values() if "pt" in (w["kind"], w["sport"])])
 
     def test_swims_need_a_pool_and_are_notes(self):
         swims = [w for w in self.bank.values() if w["sport"] == "swim"]
@@ -159,7 +174,7 @@ tiers:
   ride: primary
   run: secondary
   strength: secondary
-  pt: secondary
+  mobility: secondary
 other: []
 places:
   home: [bodyweight, bands, kettlebell, smart-trainer]
@@ -168,7 +183,7 @@ availability:
   days_per_week: 6
   fixed: {}
 easy_run_pace: "5:45–6:00/km"
-pairings: [pt+strength]
+pairings: [mobility+strength]
 alternatives: on
 ftp: 250
 setup:
@@ -212,7 +227,7 @@ def dry_run(path):
 
 class PushWeekDryRun(unittest.TestCase):
     def setUp(self):
-        athlete_dir(self, INDOOR_PROFILE)
+        with_pt(self, INDOOR_PROFILE)
 
     def test_example_week_has_no_plan_problems(self):
         fm, days = icu.parse_week(EXAMPLE_WEEK)
@@ -239,8 +254,9 @@ class ExampleProfileWeeks(unittest.TestCase):
         athlete_dir(self, example_profile("profile-home.md"))
         out = dry_run(EXAMPLES / "profile-home-2026-W45.md")
         self.assertIn("dry run: 8 to upsert", out)
-        self.assertIn("2026-11-02  NOTE    PT routine + Strength (3 rounds)", out)
-        self.assertIn("2026-11-06  NOTE    PT routine + Strength (3 rounds)", out)
+        self.assertIn("2026-11-02  NOTE    Mobility (2 rounds) + Strength (3 rounds)", out)
+        self.assertIn("2026-11-03  NOTE    Mobility (2 rounds)", out)
+        self.assertIn("2026-11-06  NOTE    Mobility (2 rounds) + Strength (3 rounds)", out)
 
     def test_week_for_the_two_place_athlete_passes(self):
         athlete_dir(self, example_profile("profile-gym.md"))
@@ -271,7 +287,7 @@ class ExampleProfileWeeks(unittest.TestCase):
 
     def test_dumbbell_only_athlete_cannot_do_a_kettlebell_exercise(self):
         athlete_dir(self, example_profile("profile-home.md"))
-        path = week(self, {"Mon": ("Strength", "pt, kb-swing, db-goblet-squat, push-up")})
+        path = week(self, {"Mon": ("Strength", "kb-swing, db-goblet-squat, push-up")})
         with self.assertRaises(SystemExit) as cm:
             dry_run(path)
         self.assertIn("Mon: kb-swing needs kettlebell (not at home)",
@@ -281,7 +297,7 @@ class ExampleProfileWeeks(unittest.TestCase):
         banded = example_profile("profile-home.md").replace("[bodyweight, dumbbells]",
                                                              "[bodyweight, dumbbells, bands]")
         athlete_dir(self, banded)
-        path = week(self, {"Mon": ("Strength", "pt, db-goblet-squat, db-rdl, band-pull-apart, pallof-press")})
+        path = week(self, {"Mon": ("Strength", "db-goblet-squat, db-rdl, band-pull-apart, pallof-press")})
         with self.assertRaises(SystemExit) as cm:
             dry_run(path)
         self.assertIn("Mon: pallof-press needs band-anchor (not at home)",
@@ -291,7 +307,7 @@ class ExampleProfileWeeks(unittest.TestCase):
 
 class ProfileChecks(unittest.TestCase):
     def problems(self, profile, rows, level="normal"):
-        athlete_dir(self, profile)
+        with_pt(self, profile)
         return build(week(self, rows, level))[1]
 
     def test_add_on_equipment_is_checked_too(self):
@@ -321,10 +337,10 @@ class ProfileChecks(unittest.TestCase):
 
     def test_pairing_must_be_in_the_profile(self):
         problems = self.problems(INDOOR_PROFILE, {"Mon": ("Recovery", "pt, rec-walk")})
-        self.assertIn("Mon: pt + walk is not an allowed pairing (profile pairings: pt+strength)", problems)
+        self.assertIn("Mon: mobility + walk is not an allowed pairing (profile pairings: mobility+strength)", problems)
 
     def test_nothing_pairs_with_a_quality_session(self):
-        problems = self.problems(INDOOR_PROFILE.replace("[pt+strength]", "[pt+strength, ride+pt]"),
+        problems = self.problems(INDOOR_PROFILE.replace("[mobility+strength]", "[mobility+strength, ride+mobility]"),
                                  {"Tue": ("Quality", "th-2, pt")})
         self.assertIn("Tue: nothing can be paired with a Quality Session", problems)
 
@@ -356,7 +372,7 @@ class ProfileChecks(unittest.TestCase):
 
 class PushedEvents(unittest.TestCase):
     def events(self, profile, rows, level="normal", bank=None):
-        athlete_dir(self, profile)
+        with_pt(self, profile)
         events, problems = build(week(self, rows, level), bank)
         self.assertEqual(problems, [])
         return events
@@ -382,6 +398,7 @@ class PushedEvents(unittest.TestCase):
         self.assertIn("Main set", e["description"])
 
     def test_dose_for_the_week_level_is_appended(self):
+        with_pt(self, INDOOR_PROFILE)
         bank = icu.load_bank()
         bank["pt"] = {**bank["pt"], "dose": {"light": "2 rounds", "normal": "3 rounds", "push": "4 rounds"}}
         e = event(self.events(INDOOR_PROFILE, {"Fri": ("Recovery", "pt")}, "light", bank), "Fri")
@@ -449,7 +466,7 @@ HOME_STRENGTH = "db-goblet-squat, db-rdl, push-up, db-row, db-suitcase-carry, de
 
 class ComposedStrength(unittest.TestCase):
     def build(self, rows, level="normal", profile=None):
-        athlete_dir(self, profile or example_profile("profile-home.md"))
+        with_pt(self, profile or example_profile("profile-home.md"))
         return build(week(self, rows, level))
 
     def test_a_strength_row_is_one_note_listing_each_exercise(self):
@@ -501,7 +518,77 @@ class ComposedStrength(unittest.TestCase):
 
     def test_exercises_in_a_workout_cell_are_consecutive(self):
         problems = self.build({"Mon": ("Strength", "db-goblet-squat, db-rdl, push-up, pt, db-row, dead-bug, air-squat")})[1]
-        self.assertIn("Mon: a Workout cell has one block of consecutive Exercises", problems)
+        self.assertIn("Mon: a Workout cell has one block of consecutive Exercises, "
+                      "or one of strength and one of mobility", problems)
+
+
+HOME_MOBILITY = "hip-90-90, cat-cow, thread-the-needle, ankle-knee-to-wall, hamstring-fold, wall-slide"
+
+
+class MobilitySessions(unittest.TestCase):
+    def build(self, rows, level="normal", profile=None):
+        with_pt(self, profile or example_profile("profile-home.md"))
+        return build(week(self, rows, level))
+
+    def test_a_composed_mobility_session_on_a_recovery_day(self):
+        events, problems = self.build({"Tue": ("Recovery", HOME_MOBILITY)})
+        self.assertEqual(problems, [])
+        e = event(events, "Tue")
+        self.assertEqual(e["name"], "Mobility (2 rounds)")
+        self.assertIn("- 90/90 hip switch × 6/side: Sit with both knees bent", e["description"])
+        self.assertNotIn("Progress:", e["description"])
+
+    def test_a_composed_mobility_session_has_6_to_8_exercises(self):
+        five = "hip-90-90, cat-cow, thread-the-needle, ankle-knee-to-wall, hamstring-fold"
+        self.assertIn("Tue: a Mobility block needs 6–8 Exercises, has 5",
+                      self.build({"Tue": ("Recovery", five)})[1])
+        nine = HOME_MOBILITY + ", couch-stretch, open-book, calf-stretch"
+        self.assertIn("Tue: a Mobility block needs 6–8 Exercises, has 9",
+                      self.build({"Tue": ("Recovery", nine)})[1])
+
+    def test_a_routine_plus_two_or_three_mobility_exercises_is_one_session_not_a_pairing(self):
+        no_pairings = example_profile("profile-home.md").replace("[mobility+strength]", "[]")
+        events, problems = self.build({"Tue": ("Recovery", "pt, couch-stretch, open-book")},
+                                      profile=no_pairings)
+        self.assertEqual(problems, [])
+        e = event(events, "Tue")
+        self.assertEqual(e["name"], "PT routine + Mobility (2 rounds)")
+        self.assertIn("Do your usual physical-therapy routine", e["description"])
+        self.assertIn("- Couch stretch × 45 s/side", e["description"])
+
+    def test_a_routine_takes_2_to_3_mobility_exercises(self):
+        problems = self.build({"Tue": ("Recovery", f"pt, {HOME_MOBILITY}")})[1]
+        self.assertIn("Tue: a Mobility block after a mobility Workout needs 2–3 Exercises, has 6",
+                      problems)
+
+    def test_a_routine_paired_with_composed_strength(self):
+        events, problems = self.build({"Mon": ("Strength", f"pt, {HOME_STRENGTH}")})
+        self.assertEqual(problems, [])
+        self.assertEqual(event(events, "Mon")["name"], "PT routine + Strength (3 rounds)")
+
+    def test_composed_mobility_paired_with_composed_strength(self):
+        events, problems = self.build({"Mon": ("Strength", f"{HOME_MOBILITY}, {HOME_STRENGTH}")})
+        self.assertEqual(problems, [])
+        self.assertEqual(event(events, "Mon")["name"], "Mobility (2 rounds) + Strength (3 rounds)")
+
+    def test_a_week_mixing_the_routine_a_topped_up_routine_and_a_composed_session(self):
+        rows = {"Mon": ("Strength", "pt, kb-goblet-squat, kb-swing, push-up, band-pull-apart, "
+                                    "kb-suitcase-carry, dead-bug"),
+                "Thu": ("Recovery", "pt, band-dislocate, couch-stretch"),
+                "Fri": ("Recovery", "pt"),
+                "Sun": ("Recovery", HOME_MOBILITY + ", band-hamstring-stretch")}
+        events, problems = self.build(rows, profile=INDOOR_PROFILE)
+        self.assertEqual(problems, [])
+        self.assertEqual([event(events, d)["name"] for d in ("Mon", "Thu", "Fri", "Sun")],
+                         ["PT routine + Strength (3 rounds)", "PT routine + Mobility (2 rounds)",
+                          "PT routine", "Mobility (2 rounds)"])
+
+    def test_mobility_and_strength_need_the_pairing_in_the_profile(self):
+        no_pairings = example_profile("profile-home.md").replace("[mobility+strength]", "[]")
+        problems = self.build({"Mon": ("Strength", f"{HOME_MOBILITY}, {HOME_STRENGTH}")},
+                              profile=no_pairings)[1]
+        self.assertIn("Mon: mobility + strength is not an allowed pairing (profile pairings: none)",
+                      problems)
 
 
 class Extensions(unittest.TestCase):
@@ -613,6 +700,22 @@ Progress: add a plate once all rounds feel smooth at 12 reps.
 """
 
 
+PT_ROUTINE = """---
+id: pt
+name: PT routine
+kind: mobility
+sport: mobility
+duration_min: 30
+equipment: []
+delivery: note
+---
+
+# PT routine
+
+Do your usual physical-therapy routine (~30 min).
+"""
+
+
 def personal(test, files, profile=INDOOR_PROFILE):
     """An athlete dir whose bank/ holds `files`, a map of relative path to text."""
     d = athlete_dir(test, profile)
@@ -718,6 +821,16 @@ class PersonalBank(unittest.TestCase):
             icu.main(["icu.py", "push-week", str(path), "--dry-run"])
         self.assertIn(f"Workout Bank problem: Personal {d / 'bank/hill-walk.md'}: unknown sport 'hiking'",
                       str(cm.exception))
+
+    def test_a_personal_mobility_workout_passes_check_bank(self):
+        personal(self, {"pt.md": PT_ROUTINE})
+        w = icu.load_bank()["pt"]
+        self.assertEqual((w["kind"], w["sport"], w["origin"]), ("mobility", "mobility", "personal"))
+
+    def test_the_old_pt_kind_is_rejected(self):
+        d = personal(self, {"pt.md": PT_ROUTINE.replace("kind: mobility", "kind: pt")})
+        with self.assertRaisesRegex(icu.BankError, f"Personal {d / 'bank/pt.md'}: unknown kind 'pt'"):
+            icu.load_bank()
 
     def test_core_entries_are_marked_core(self):
         personal(self, {})

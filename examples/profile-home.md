@@ -1,6 +1,6 @@
 ---
 tiers:
-  pt: primary
+  mobility: primary
   strength: secondary
   walk: occasional
 other:
@@ -12,7 +12,7 @@ availability:
   days_per_week: 4
   fixed:
     Thu: other:pilates
-pairings: [pt+strength]
+pairings: [mobility+strength]
 setup:
   sync_verified: no
   strava_connected: no
