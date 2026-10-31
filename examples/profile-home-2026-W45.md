@@ -11,16 +11,16 @@ An invented example: a Normal week planned from `examples/profile-home.md`, the 
 
 ## Plan
 
-| Day | Date  | Session  | Workout        | Add-on | Done |
-|-----|-------|----------|----------------|--------|------|
-| Mon | 11-02 | Recovery | pt             |        |      |
-| Tue | 11-03 | Recovery | pt             |        |      |
-| Wed | 11-04 | Recovery | rec-walk       |        |      |
-| Thu | 11-05 | Other    | other:pilates  |        |      |
-| Fri | 11-06 | Recovery | pt             |        |      |
-| Sat | 11-07 | Recovery | other:yin-yoga |        |      |
-| Sun | 11-08 | Recovery |                |        |      |
+| Day | Date  | Session  | Workout                                                                                         | Add-on | Done |
+|-----|-------|----------|-------------------------------------------------------------------------------------------------|--------|------|
+| Mon | 11-02 | Strength | pt, db-goblet-squat, db-rdl, push-up, db-row, db-suitcase-carry, dead-bug                       |        |      |
+| Tue | 11-03 | Recovery | pt                                                                                              |        |      |
+| Wed | 11-04 | Recovery | rec-walk                                                                                        |        |      |
+| Thu | 11-05 | Other    | other:pilates                                                                                   |        |      |
+| Fri | 11-06 | Strength | pt, reverse-lunge, single-leg-glute-bridge, db-overhead-press, prone-ytw, db-overhead-carry, side-plank |        |      |
+| Sat | 11-07 | Recovery | other:yin-yoga                                                                                  |        |      |
+| Sun | 11-08 | Recovery |                                                                                                 |        |      |
 
 ## Reasoning
 
-The Normal template from the profile. Thursday's Pilates class is fixed. The template's Strength Sessions (Monday and Friday, `pt, strength`) can't be filled: every Strength Workout in the Bank needs a kettlebell, and this athlete has bodyweight and dumbbells. Those days fall back to the PT routine alone, and the gap is in the profile's Notes. Saturday swaps PT for the yin yoga video.
+The Normal template from the profile. Thursday's Pilates class is fixed. Monday and Friday are Strength Sessions after PT (`pt, strength`), composed from the bodyweight and dumbbell Exercises: each covers squat, hinge, push, pull, carry and core, and Friday uses none of Monday's Exercises. A Normal week gives 3 rounds. Saturday swaps PT for the yin yoga video.

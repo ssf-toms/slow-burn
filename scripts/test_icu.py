@@ -15,8 +15,9 @@ import icu  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 EXAMPLE_WEEK = ROOT / "examples" / "2026-W44.md"
 EXAMPLES = ROOT / "examples"
-EQUIPMENT_TAGS = {"bodyweight", "bands", "kettlebell", "dumbbells", "barbell",
-                  "gym", "smart-trainer", "pool", "hr-strap"}
+EQUIPMENT_TAGS = {"bodyweight", "bands", "band-anchor", "kettlebell", "dumbbells", "barbell",
+                  "bench", "cable", "pull-up-bar", "gym", "smart-trainer", "pool", "hr-strap"}
+PATTERNS = {"squat", "hinge", "push", "pull", "carry", "core", "mobility"}
 
 
 def athlete_dir(test, profile_text):
@@ -67,6 +68,46 @@ class AthleteProfile(unittest.TestCase):
 class BankFrontmatter(unittest.TestCase):
     def setUp(self):
         self.bank = icu.load_bank()
+
+    def test_exercises_load_with_their_pattern_and_cue(self):
+        e = self.bank["kb-goblet-squat"]
+        self.assertEqual((e["kind"], e["pattern"], e["reps"]), ("exercise", "squat", "10"))
+        self.assertEqual(e["equipment"], ["kettlebell"])
+        self.assertTrue(e["cue"])
+        self.assertNotIn("Progress:", e["cue"])
+
+    def test_every_exercise_has_a_pattern_an_amount_a_cue_and_a_progress_line(self):
+        exercises = {k: e for k, e in self.bank.items() if e["kind"] == "exercise"}
+        self.assertGreater(len(exercises), 40)
+        for xid, e in exercises.items():
+            with self.subTest(exercise=xid):
+                self.assertIn(e["pattern"], PATTERNS)
+                self.assertEqual(("reps" in e) + ("hold" in e), 1)
+                self.assertTrue(e["cue"])
+                self.assertIn("\nProgress: ", e["prose"])
+
+    def test_anchored_band_moves_need_the_anchor_tag(self):
+        for xid in ("pallof-press", "band-face-pull", "band-row"):
+            with self.subTest(exercise=xid):
+                self.assertIn("band-anchor", self.bank[xid]["equipment"])
+
+    def test_each_pattern_has_options_for_each_home_equipment_set(self):
+        for kit in ("bodyweight", "kettlebell", "dumbbells"):
+            for pattern in PATTERNS - {"mobility"}:
+                with self.subTest(kit=kit, pattern=pattern):
+                    self.assertTrue(any(e["pattern"] == pattern and e["equipment"] == [kit]
+                                        for e in self.bank.values() if e["kind"] == "exercise"))
+
+    def test_an_exercise_and_a_workout_cannot_share_an_id(self):
+        d = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, d)
+        for sub in ("exercises", "recovery"):
+            (d / sub).mkdir()
+        shutil.copy(ROOT / "bank" / "recovery" / "rec-walk.md", d / "recovery")
+        (d / "exercises" / "rec-walk.md").write_text(
+            '---\nid: rec-walk\nname: Walk\npattern: carry\nequipment: []\nreps: "1"\n---\n\nWalk.\n')
+        with self.assertRaisesRegex(icu.PlanError, "duplicate Bank ID rec-walk"):
+            icu.load_bank(d)
 
     def test_every_workout_lists_its_equipment_from_the_known_tags(self):
         for wid, w in self.bank.items():
@@ -176,15 +217,29 @@ class ExampleProfileWeeks(unittest.TestCase):
 
     def test_week_for_the_home_athlete_passes(self):
         athlete_dir(self, example_profile("profile-home.md"))
-        self.assertIn("dry run: 8 to upsert", dry_run(EXAMPLES / "profile-home-2026-W45.md"))
+        out = dry_run(EXAMPLES / "profile-home-2026-W45.md")
+        self.assertIn("dry run: 8 to upsert", out)
+        self.assertIn("2026-11-02  NOTE    PT routine + Strength (3 rounds)", out)
+        self.assertIn("2026-11-06  NOTE    PT routine + Strength (3 rounds)", out)
 
-    def test_dumbbell_only_athlete_cannot_do_str_a(self):
+    def test_dumbbell_only_athlete_cannot_do_a_kettlebell_exercise(self):
         athlete_dir(self, example_profile("profile-home.md"))
-        path = week(self, {"Mon": ("Strength", "pt, str-a")})
+        path = week(self, {"Mon": ("Strength", "pt, kb-swing, db-goblet-squat, push-up")})
         with self.assertRaises(SystemExit) as cm:
             dry_run(path)
-        self.assertIn("Mon: str-a needs kettlebell, bands (not in the profile's equipment)",
+        self.assertIn("Mon: kb-swing needs kettlebell (not in the profile's equipment)",
                       str(cm.exception))
+
+    def test_pallof_press_fails_clearly_without_a_band_anchor(self):
+        banded = example_profile("profile-home.md").replace("[bodyweight, dumbbells]",
+                                                             "[bodyweight, dumbbells, bands]")
+        athlete_dir(self, banded)
+        path = week(self, {"Mon": ("Strength", "pt, db-goblet-squat, db-rdl, band-pull-apart, pallof-press")})
+        with self.assertRaises(SystemExit) as cm:
+            dry_run(path)
+        self.assertIn("Mon: pallof-press needs band-anchor (not in the profile's equipment)",
+                      str(cm.exception))
+        self.assertNotIn("band-pull-apart", str(cm.exception))  # bands alone is enough for it
 
 
 class ProfileChecks(unittest.TestCase):
@@ -195,8 +250,9 @@ class ProfileChecks(unittest.TestCase):
     def test_add_on_equipment_is_checked_too(self):
         home = example_profile("profile-home.md").replace("[bodyweight, dumbbells]", "[bodyweight, bands]")
         athlete_dir(self, home.replace("  walk: occasional", "  walk: occasional\n  run: primary"))
-        problems = build(week(self, {"Wed": ("Endurance", "run-easy-6-8", "addon-upper")}))[1]
-        self.assertIn("Wed: addon-upper needs kettlebell (not in the profile's equipment)", problems)
+        problems = build(week(self, {"Wed": ("Endurance", "run-easy-6-8", "band-pull-apart, kb-halo")}))[1]
+        self.assertIn("Wed: kb-halo needs kettlebell (not in the profile's equipment)", problems)
+        self.assertFalse(any("band-pull-apart" in p for p in problems))
 
     def test_rides_need_no_smart_trainer_to_be_planned(self):
         self.assertEqual(self.problems(example_profile(), {"Tue": ("Quality", "th-2")}), [])
@@ -206,7 +262,8 @@ class ProfileChecks(unittest.TestCase):
         self.assertIn("Tue: ftp-ramp-test needs smart-trainer (not in the profile's equipment)", problems)
 
     def test_allowed_pairing_passes_in_either_order(self):
-        for workouts in ("pt, str-a", "str-a, pt"):
+        strength = "kb-goblet-squat, kb-swing, push-up, band-pull-apart, kb-suitcase-carry, dead-bug"
+        for workouts in (f"pt, {strength}", f"{strength}, pt"):
             with self.subTest(workouts=workouts):
                 self.assertEqual(self.problems(INDOOR_PROFILE, {"Mon": ("Strength", workouts)}), [])
 
@@ -291,6 +348,66 @@ class PushedEvents(unittest.TestCase):
     def test_alternative_line_when_its_sport_is_tiered_and_equipment_fits(self):
         e = event(self.events(INDOOR_PROFILE, {"Wed": ("Endurance", "end-ride-60")}), "Wed")
         self.assertIn("Alternative: Easy run 8–10 km", e["description"])
+
+
+HOME_STRENGTH = "db-goblet-squat, db-rdl, push-up, db-row, db-suitcase-carry, dead-bug"
+
+
+class ComposedStrength(unittest.TestCase):
+    def build(self, rows, level="normal", profile=None):
+        athlete_dir(self, profile or example_profile("profile-home.md"))
+        return build(week(self, rows, level))
+
+    def test_a_strength_row_is_one_note_listing_each_exercise(self):
+        events, problems = self.build({"Mon": ("Strength", f"pt, {HOME_STRENGTH}")})
+        self.assertEqual(problems, [])
+        e = event(events, "Mon")
+        self.assertEqual(e["name"], "PT routine + Strength (3 rounds)")
+        self.assertIn("- Goblet squat (dumbbell) × 10: Hold one dumbbell upright at your chest",
+                      e["description"])
+        self.assertIn("- Dumbbell suitcase carry × 40 s/side: Dumbbell in one hand", e["description"])
+        self.assertNotIn("Progress:", e["description"])
+
+    def test_rounds_come_from_the_week_level(self):
+        for level, rounds in (("light", 2), ("normal", 3), ("push", 4)):
+            with self.subTest(level=level):
+                events, _ = self.build({"Mon": ("Strength", HOME_STRENGTH)}, level)
+                e = event(events, "Mon")
+                self.assertEqual(e["name"], f"Strength ({rounds} rounds)")
+                self.assertTrue(e["description"].startswith(f"{rounds} rounds"))
+
+    def test_an_add_on_is_its_own_composed_note(self):
+        events, problems = self.build({"Wed": ("Endurance", "end-ride-60", "kb-swing, band-pull-apart, dead-bug")},
+                                      "light", INDOOR_PROFILE)
+        self.assertEqual(problems, [])
+        e = next(e for e in events if e["external_id"] == "tp-2026-W45-Wed-addon")
+        self.assertEqual(e["name"], "Add-on (2 rounds)")
+        self.assertIn("- Band pull-apart × 15: Arms straight", e["description"])
+
+    def test_the_add_on_cell_holds_only_exercises(self):
+        problems = self.build({"Wed": ("Endurance", "end-ride-60", "pt, kb-swing, dead-bug")},
+                              profile=INDOOR_PROFILE)[1]
+        self.assertIn("Wed: the Add-on holds Exercises only, not pt", problems)
+
+    def test_a_strength_block_has_3_to_8_exercises(self):
+        problems = self.build({"Mon": ("Strength", "pt, db-goblet-squat, db-row")})[1]
+        self.assertIn("Mon: a Strength block needs 3–8 Exercises, has 2", problems)
+        nine = HOME_STRENGTH + ", air-squat, glute-bridge, prone-ytw"
+        self.assertIn("Mon: a Strength block needs 3–8 Exercises, has 9",
+                      self.build({"Mon": ("Strength", nine)})[1])
+
+    def test_an_add_on_has_2_to_4_exercises(self):
+        problems = self.build({"Wed": ("Endurance", "end-ride-60", "dead-bug")}, profile=INDOOR_PROFILE)[1]
+        self.assertIn("Wed: an Add-on needs 2–4 Exercises, has 1", problems)
+
+    def test_an_exercise_is_not_repeated_within_a_row(self):
+        problems = self.build({"Wed": ("Endurance", "end-ride-60", "dead-bug, kb-swing, dead-bug")},
+                              profile=INDOOR_PROFILE)[1]
+        self.assertIn("Wed: dead-bug is in the row twice", problems)
+
+    def test_exercises_in_a_workout_cell_are_consecutive(self):
+        problems = self.build({"Mon": ("Strength", "db-goblet-squat, db-rdl, push-up, pt, db-row, dead-bug, air-squat")})[1]
+        self.assertIn("Mon: a Workout cell has one block of consecutive Exercises", problems)
 
 
 class Extensions(unittest.TestCase):

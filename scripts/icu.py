@@ -37,6 +37,9 @@ OTHER = "other:"                # Workout cell prefix for the profile's `other` 
 SMART_TRAINER = "smart-trainer"  # equipment tag
 EXTENSION_MIN = (10, 15)         # allowed Extension minutes, Push Quality rides only
 EXTENSION_PCT = 68               # Endurance (Zone 2) %FTP for Extension minutes
+ROUNDS = {"light": 2, "normal": 3, "push": 4}  # composed strength, by Week Level
+STRENGTH_BLOCK = (3, 8)          # Exercises in a Workout cell's composed block
+ADD_ON_BLOCK = (2, 4)            # Exercises in an Add-on
 
 
 class PlanError(Exception):
@@ -174,12 +177,27 @@ def load_profile():
     return split_frontmatter(path.read_text())[0]
 
 
-def load_bank():
-    bank = {}
-    for p in sorted((ROOT / "bank").rglob("*.md")):
+def load_exercise(fm, body):
+    """An Exercise (bank/exercises/, ADR 0004): pushed only inside a composed note."""
+    cue = re.sub(r"\n?Progress:.*", "", body.strip(), flags=re.S).strip()
+    return {**fm, "kind": "exercise", "sport": "strength", "delivery": "note",
+            "cue": " ".join(cue.split()), "prose": body.strip()}
+
+
+def load_bank(bank_dir=None):
+    """Workouts and Exercises, keyed by ID in one namespace."""
+    bank, where = {}, {}
+    bank_dir = Path(bank_dir or ROOT / "bank")
+    for p in sorted(bank_dir.rglob("*.md")):
         if p.name == "README.md":
             continue
         fm, body = split_frontmatter(p.read_text())
+        if fm["id"] in bank:
+            raise PlanError(f"duplicate Bank ID {fm['id']}: {where[fm['id']]} and {p}")
+        where[fm["id"]] = p
+        if p.parent.name == "exercises":
+            bank[fm["id"]] = load_exercise(fm, body)
+            continue
         block = re.search(r"```intervals\n(.*?)\n```", body, re.S)
         prose = re.sub(r"```intervals\n.*?\n```", "", body, flags=re.S)
         prose = re.sub(r"^# .*\n", "", prose.strip())
@@ -218,7 +236,7 @@ def parse_week(path):
                 token, extend = m.group(1), (m.group(1), int(m.group(2)))
             ids.append(token)
         days.append(dict(day=day, date=date, session=session, workouts=ids,
-                         addon=addon or None, extend=extend))
+                         addon=split_top(addon), extend=extend))
     if [d["day"] for d in days] != DAYS:
         raise PlanError("Plan must list Mon..Sun once each, in order")
     return fm, days
@@ -255,7 +273,39 @@ def note_event(name, description, date, external_id):
 
 
 def row_ids(d):
-    return d["workouts"] + ([d["addon"]] if d["addon"] else [])
+    return d["workouts"] + d["addon"]
+
+
+def is_exercise(w):
+    return w.get("kind") == "exercise"
+
+
+def grouped(ids, bank):
+    """A cell's Workouts in order, with each run of consecutive Exercises as one list."""
+    out = []
+    for w in (bank[i] for i in ids):
+        if not is_exercise(w):
+            out.append(w)
+        elif out and isinstance(out[-1], list):
+            out[-1].append(w)
+        else:
+            out.append([w])
+    return out
+
+
+def composed_note(label, exercises, level):
+    """One composed block as a note Workout: rounds from the Level (ADR 0004)."""
+    rounds = ROUNDS.get(level, ROUNDS["normal"])
+    lines = [f"- {e['name']} × {e.get('reps') or e.get('hold')}: {e['cue']}" for e in exercises]
+    return dict(id="+".join(e["id"] for e in exercises), name=f"{label} ({rounds} rounds)",
+                sport="strength", delivery="note", equipment=[],
+                prose=f"{rounds} rounds, resting 60–90 s between rounds.\n\n" + "\n".join(lines))
+
+
+def composed(ids, bank, label, level):
+    """A cell's Workouts, with each block of Exercises composed into one note."""
+    return [composed_note(label, g, level) if isinstance(g, list) else g
+            for g in grouped(ids, bank)]
 
 
 def pairing_problem(session, workouts, pairings):
@@ -289,8 +339,7 @@ def plan_problems(d, bank, level, profile):
         problems.append(f"not in Bank: {', '.join(missing)}")
     if missing or unknown_other:
         return problems
-    workouts = [bank[w] for w in d["workouts"]]
-    for w in workouts:
+    for w in (bank[i] for i in d["workouts"]):
         if w.get("levels") and level not in w["levels"]:
             problems.append(f"{w['id']} is for {'/'.join(w['levels'])} weeks only")
     for w in [bank[i] for i in ids]:
@@ -299,6 +348,8 @@ def plan_problems(d, bank, level, profile):
             problems.append(f"{w['id']} needs {', '.join(lacking)} (not in the profile's equipment)")
         if "{easy_run_pace}" in w["prose"] and not profile.get("easy_run_pace"):
             problems.append(f"{w['id']} needs easy_run_pace in the profile")
+    problems += composition_problems(d, bank)
+    workouts = composed(d["workouts"], bank, "Strength", level)
     pairing = pairing_problem(d["session"], workouts, profile.get("pairings") or [])
     if pairing:
         problems.append(pairing)
@@ -306,6 +357,28 @@ def plan_problems(d, bank, level, profile):
         problems.append("more than one ride Workout")
     if d.get("extend"):
         problems += extension_problems(d, bank, level)
+    return problems
+
+
+def composition_problems(d, bank):
+    """Composed strength: block sizes, no repeats, Exercise-only Add-ons (ADR 0004)."""
+    problems = []
+    blocks = [g for g in grouped(d["workouts"], bank) if isinstance(g, list)]
+    if len(blocks) > 1:
+        problems.append("a Workout cell has one block of consecutive Exercises")
+    for b in blocks:
+        if not STRENGTH_BLOCK[0] <= len(b) <= STRENGTH_BLOCK[1]:
+            problems.append(f"a Strength block needs {STRENGTH_BLOCK[0]}–{STRENGTH_BLOCK[1]} "
+                            f"Exercises, has {len(b)}")
+    not_exercises = [i for i in d["addon"] if not is_exercise(bank[i])]
+    if not_exercises:
+        problems.append(f"the Add-on holds Exercises only, not {', '.join(not_exercises)}")
+    elif d["addon"] and not ADD_ON_BLOCK[0] <= len(d["addon"]) <= ADD_ON_BLOCK[1]:
+        problems.append(f"an Add-on needs {ADD_ON_BLOCK[0]}–{ADD_ON_BLOCK[1]} "
+                        f"Exercises, has {len(d['addon'])}")
+    exercise_ids = [i for i in row_ids(d) if is_exercise(bank[i])]
+    for i in dict.fromkeys(i for i in exercise_ids if exercise_ids.count(i) > 1):
+        problems.append(f"{i} is in the row twice")
     return problems
 
 
@@ -361,8 +434,8 @@ def build_events(fm, days, bank, profile):
         problems += [f"{d['day']}: {p}" for p in plan_problems(d, bank, level, profile)]
         if any(w not in bank for w in row_ids(d)):
             continue
-        workouts = [bank[w] for w in d["workouts"]]
-        rides = [w for w in workouts if w["delivery"] == "workout"]
+        workouts = composed(d["workouts"], bank, "Strength", level)
+        rides =[w for w in workouts if w["delivery"] == "workout"]
         notes = [w for w in workouts if w["delivery"] != "workout"]
         if rides and notes:  # e.g. Test row: MyWhoosh test note + pushed spin
             events.append(note_event(*combined(notes), d["date"], ext(week, f"{d['day']}-note")))
@@ -384,8 +457,8 @@ def build_events(fm, days, bank, profile):
                                external_id=ext(week, d["day"])))
         elif workouts:
             events.append(note_event(*combined(workouts), d["date"], ext(week, d["day"])))
-        if d["addon"]:
-            addon = bank[d["addon"]]
+        if d["addon"] and all(is_exercise(bank[i]) for i in d["addon"]):
+            addon = composed_note("Add-on", [bank[i] for i in d["addon"]], level)
             events.append(note_event(addon["name"], description(addon), d["date"],
                                      ext(week, f"{d['day']}-addon")))
     sunday = days[-1]["date"]
