@@ -16,14 +16,14 @@ The profile decides which rules apply. "Ride is tiered" means `tiers` lists `rid
 
 Ask the user's decisions with the AskUserQuestion tool, recommended option first.
 
-The client is `scripts/icu.py`. Run it from the repo root.
+The client is `scripts/icu.py`. Run it from the repo root as `python3 scripts/icu.py <command>`. If `python3` isn't found (usual on Windows), use `py` instead, and keep using it for the rest of the session.
 
 ## 1. Gather
 
 1. **Profile:** hold the fields and the `## Week Templates` table from `athlete/profile.md`, plus the gaps in its Notes.
 2. **Target week:** the coming Mon–Sun. If today is Monday and the current week has no Week Record, plan the current week instead.
 3. **Last week:** the most recent Week Record in `athlete/weeks/`. Also read the headers of the two before it.
-4. **Ride data**, only if ride is tiered: run `./scripts/icu.py rides <last Mon> <last Sun>` and `./scripts/icu.py fitness <today − 14> <today>`.
+4. **Ride data**, only if ride is tiered: run `python3 scripts/icu.py rides <last Mon> <last Sun>` and `python3 scripts/icu.py fitness <today − 14> <today>`.
 5. **No Week Record yet?** Use the starting state at the end of `docs/week-records.md`. If ride is Primary, ask for the date of the last FTP test, and if run is Primary, of the last run test. Skip step 2.
 
 **Done when** you hold the profile and its templates, last week's Plan and Next block (or the starting state), and the Levels of the last three weeks; plus, if ride is tiered, last week's rides and the latest fitness, fatigue, form and ramp numbers.
@@ -77,9 +77,9 @@ The client is `scripts/icu.py`. Run it from the repo root.
    - Write `ftp` from the profile if ride is tiered; leave it out otherwise.
    - In Reasoning, name each gap and what the user chose instead.
    - Run `git -C athlete log --oneline -10`. If a commit touching `profile.md` (a "Setup: …" commit) is newer than the last "Check-in" commit, say in Reasoning what changed in the profile.
-2. Run `./scripts/icu.py push-week athlete/weeks/<week>.md --dry-run`. Fix any plan problems it reports.
-3. Run `./scripts/icu.py push-week athlete/weeks/<week>.md`.
-4. Confirm with `./scripts/icu.py events <Mon> <next Mon>`. Report any push errors.
+2. Run `python3 scripts/icu.py push-week athlete/weeks/<week>.md --dry-run`. Fix any plan problems it reports.
+3. Run `python3 scripts/icu.py push-week athlete/weeks/<week>.md`.
+4. Confirm with `python3 scripts/icu.py events <Mon> <next Mon>`. Report any push errors.
 5. Commit both Week Records in the `athlete/` repo (`git -C athlete`) as "Check-in <week>: <Level>".
 
 **Done when** the events listing shows every planned Session plus the Check-in reminder, and the commit exists. Finish by telling the user their week in one line per day, gaps included.

@@ -1,12 +1,15 @@
-"""Tests for icu.py. Run with: python3 -m unittest discover -s scripts"""
+"""Tests for icu.py. Run with: python3 -m unittest discover -s scripts
+(on Windows: py -m unittest discover -s scripts)"""
 import contextlib
 import io
 import os
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
+import urllib.error
 from unittest import mock
 from pathlib import Path
 
@@ -24,7 +27,7 @@ def athlete_dir(test, profile_text):
     d = tempfile.mkdtemp()
     test.addCleanup(shutil.rmtree, d)
     if profile_text is not None:
-        Path(d, "profile.md").write_text(profile_text)
+        Path(d, "profile.md").write_text(profile_text, encoding="utf-8")
     patcher = mock.patch.dict(os.environ, {"ATHLETE_DIR": d})
     patcher.start()
     test.addCleanup(patcher.stop)
@@ -37,7 +40,7 @@ def with_pt(test, profile_text):
 
 
 def example_profile(name="profile.md"):
-    return (EXAMPLES / name).read_text()
+    return (EXAMPLES / name).read_text(encoding="utf-8")
 
 
 class AthleteProfile(unittest.TestCase):
@@ -120,7 +123,7 @@ class BankFrontmatter(unittest.TestCase):
             (d / sub).mkdir()
         shutil.copy(ROOT / "bank" / "recovery" / "rec-walk.md", d / "recovery")
         (d / "exercises" / "rec-walk.md").write_text(
-            '---\nid: rec-walk\nname: Walk\npattern: carry\nequipment: []\nreps: "1"\n---\n\nWalk.\n')
+            '---\nid: rec-walk\nname: Walk\npattern: carry\nequipment: []\nreps: "1"\n---\n\nWalk.\n', encoding="utf-8")
         with self.assertRaisesRegex(icu.PlanError, "duplicate Bank ID rec-walk"):
             icu.load_bank(d)
 
@@ -206,7 +209,7 @@ def week(test, rows, level="normal"):
     d = tempfile.mkdtemp()
     test.addCleanup(shutil.rmtree, d)
     path = Path(d, "2026-W45.md")
-    path.write_text(text)
+    path.write_text(text, encoding="utf-8")
     return path
 
 
@@ -737,7 +740,7 @@ def personal(test, files, profile=INDOOR_PROFILE):
     d = athlete_dir(test, profile)
     for rel, text in files.items():
         (d / "bank" / rel).parent.mkdir(parents=True, exist_ok=True)
-        (d / "bank" / rel).write_text(text)
+        (d / "bank" / rel).write_text(text, encoding="utf-8")
     return d
 
 
@@ -1005,6 +1008,90 @@ class MaintainerWeek(unittest.TestCase):
                      "2026-11-06  NOTE    PT routine + Mobility (2 rounds)",
                      "2026-11-08  NOTE    Mobility (2 rounds)"):
             self.assertIn(line, out)
+
+
+class ApiKey(unittest.TestCase):
+    """The key comes from INTERVALS_API_KEY, else .intervals-key at the repo root."""
+    def setUp(self):
+        self.root = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.root)
+        patcher = mock.patch.object(icu, "KEY_FILE", self.root / ".intervals-key")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def key_file(self, text):
+        # write_bytes, not write_text: it keeps "\r\n" from being translated
+        icu.KEY_FILE.write_bytes(text.encode())
+
+    def test_the_env_var_wins_over_the_file(self):
+        self.key_file("from-file\n")
+        with mock.patch.dict(os.environ, {"INTERVALS_API_KEY": "from-env"}):
+            self.assertEqual(icu.api_key(), "from-env")
+
+    def test_the_file_is_used_and_stripped(self):
+        for text in ("abc123\n", "abc123\r\n", "  abc123  "):
+            self.key_file(text)
+            with mock.patch.dict(os.environ, {"INTERVALS_API_KEY": ""}):
+                self.assertEqual(icu.api_key(), "abc123", repr(text))
+
+    def test_no_key_exits_with_a_message_that_leaks_nothing(self):
+        message = ("No intervals.icu API key. Paste it into .intervals-key at the repo root "
+                   "(see /setup step 5), or set INTERVALS_API_KEY.")
+        for content in (None, "", " \r\n"):
+            if content is not None:
+                self.key_file(content)
+            with mock.patch.dict(os.environ, {}, clear=True), \
+                    self.assertRaises(SystemExit) as cm:
+                icu.api_key()
+            self.assertEqual(cm.exception.code, message, repr(content))
+
+    def test_a_401_says_the_key_was_rejected(self):
+        rejected = urllib.error.HTTPError(icu.API, 401, "Unauthorized", {}, io.BytesIO(b"no"))
+        with mock.patch.dict(os.environ, {"INTERVALS_API_KEY": "secret-key"}), \
+                mock.patch.object(icu.urllib.request, "urlopen", side_effect=rejected), \
+                self.assertRaises(SystemExit) as cm:
+            icu.call("GET", "", None, "0")
+        self.assertEqual(cm.exception.code, "intervals.icu rejected the API key: check .intervals-key")
+
+
+def ascii_locale(test):
+    """Make every read_text() or open() that names no encoding decode as ASCII, the way a
+    non-UTF-8 locale (Windows cp1252) would choke on UTF-8 bytes."""
+    read_text, open_ = Path.read_text, Path.open
+
+    def strict_read_text(self, encoding=None, errors=None):
+        return read_text(self, encoding=encoding or "ascii", errors=errors)
+
+    def strict_open(self, mode="r", buffering=-1, encoding=None, *args, **kwargs):
+        if "b" not in mode:
+            encoding = encoding or "ascii"
+        return open_(self, mode, buffering, encoding, *args, **kwargs)
+    for name, fake in (("read_text", strict_read_text), ("open", strict_open)):
+        patcher = mock.patch.object(Path, name, fake)
+        patcher.start()
+        test.addCleanup(patcher.stop)
+
+
+class Utf8(unittest.TestCase):
+    """Bank files, the profile and Week Records hold ′ – → and read the same on any locale."""
+    def test_the_bank_loads_non_ascii_text_on_a_non_utf8_locale(self):
+        personal(self, {"workouts/hill-walk.md": HILL_WALK.replace("# Hill walk", "# Hill walk → summit, 5′")})
+        ascii_locale(self)
+        self.assertEqual(icu.load_bank()["hill-walk"]["origin"], "personal")
+
+    def test_the_profile_and_week_record_read_on_a_non_utf8_locale(self):
+        athlete_dir(self, example_profile())
+        ascii_locale(self)
+        self.assertEqual(icu.load_profile()["easy_run_pace"], "5:20–5:40/km")
+        self.assertIn("2026-10-27", dry_run(EXAMPLE_WEEK))
+
+    def test_the_cli_prints_non_ascii_through_a_non_utf8_pipe(self):
+        env = {**os.environ, "ATHLETE_DIR": str(EXAMPLES), "PYTHONIOENCODING": "ascii"}
+        env.pop("INTERVALS_API_KEY", None)
+        r = subprocess.run([sys.executable, str(ROOT / "scripts" / "icu.py"), "push-week",
+                            str(EXAMPLE_WEEK), "--dry-run"], env=env, capture_output=True)
+        self.assertEqual(r.returncode, 0, r.stderr.decode("utf-8", "replace"))
+        self.assertIn("×", r.stdout.decode("utf-8"))
 
 
 class UsageTest(unittest.TestCase):

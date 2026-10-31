@@ -70,7 +70,7 @@ Progress: more reps (up to 15), then a 2 s pause at the bottom.
 
 This folder is the **Core Bank**. The athlete's own **Personal Workouts and Exercises** live in their athlete repo, in the same file format: Exercises in `athlete/bank/exercises/`, Workouts in `athlete/bank/workouts/` (ADR 0005). `icu.py` loads both parts as one Workout Bank. They share one ID namespace, and an ID in both parts is an error, never an override. Add one with `/add-workout`.
 
-Every Bank file, Core or Personal, must pass the mechanical checks, or `icu.py` refuses to load the Bank and names the file. Run `./scripts/icu.py check-bank` to check them:
+Every Bank file, Core or Personal, must pass the mechanical checks, or `icu.py` refuses to load the Bank and names the file. Run `python3 scripts/icu.py check-bank` to check them:
 - the required fields are present: `id`, `name`, `kind`, `sport`, `duration_min`, `equipment` and `delivery` for a Workout; `id`, `name`, `pattern`, `equipment` and exactly one of `reps` or `hold` for an Exercise;
 - `kind`, `sport`, `pattern` and `delivery` take the values in the tables above, and every `equipment` tag is a known one;
 - `id` is the file name;

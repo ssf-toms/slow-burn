@@ -16,12 +16,12 @@ The Week Record format is in `docs/week-records.md`.
 
 Ask the user's decisions with the AskUserQuestion tool, recommended option first.
 
-The client is `scripts/icu.py`. Run it from the repo root.
+The client is `scripts/icu.py`. Run it from the repo root as `python3 scripts/icu.py <command>`. If `python3` isn't found (usual on Windows), use `py` instead, and keep using it for the rest of the session.
 
 ## 1. Locate
 
 1. **Week Record:** read the record in `athlete/weeks/` for the week containing today. If there isn't one, offer the Check-in instead and stop.
-2. **What's done:** if ride is tiered, run `./scripts/icu.py rides <Mon> <today>` to see which rides are already done. Ask the user about the other Sessions so far.
+2. **What's done:** if ride is tiered, run `python3 scripts/icu.py rides <Mon> <today>` to see which rides are already done. Ask the user about the other Sessions so far.
 3. **The change:** if the user's message leaves it unclear, ask what changed: which days, why, and whether it's known or still uncertain (for example, "might be sick tomorrow").
 
 **Done when** you know which days are already done, which upcoming days are affected, and why.
@@ -49,8 +49,8 @@ A same-day swap to the Alternative needs no reshuffle. Log it in Adjustments and
 
 1. Edit the Plan table in place.
 2. Append one dated line per change under Adjustments.
-3. Run `./scripts/icu.py push-week athlete/weeks/<week>.md --from <first changed date> --dry-run`, then run it for real.
-4. Confirm with `./scripts/icu.py events <first changed date> <Sun>`.
+3. Run `python3 scripts/icu.py push-week athlete/weeks/<week>.md --from <first changed date> --dry-run`, then run it for real.
+4. Confirm with `python3 scripts/icu.py events <first changed date> <Sun>`.
 5. Commit in the `athlete/` repo (`git -C athlete`) as "Adjustment <week>: <short reason>".
 
 **Done when** the events listing matches the remaining Plan rows and the commit exists. Finish by telling the user the rest of their week in one line per day.

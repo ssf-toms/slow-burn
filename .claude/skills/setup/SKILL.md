@@ -15,9 +15,9 @@ Speak in the terms from `GLOSSARY.md`. Read these before step 1:
 
 Ask the user's decisions with the AskUserQuestion tool, recommended option first.
 
-The client is `scripts/icu.py`. Run it from the repo root. Open web pages for the user with `open <url>`.
+The client is `scripts/icu.py`. Run it from the repo root as `python3 scripts/icu.py <command>`. If `python3` isn't found (usual on Windows), use `py` instead, and keep using it for the rest of the session. Give web pages as links for the user to open.
 
-The intervals.icu API key stays with the user. They store it in the Keychain themselves with the command in step 5. Never ask for it, and if they paste one into the chat, tell them to revoke it in intervals.icu and make a new one.
+The intervals.icu API key stays with the user. It lives in `.intervals-key`, which only the user edits. Never ask for it, and never read, print or `cat` that file, or put the key in `.env`. If they paste a key into the chat, tell them to revoke it in intervals.icu and make a new one.
 
 ## 1. Detect
 
@@ -37,7 +37,7 @@ Ask in the order of the Fields table in `docs/athlete-profile.md`, and skip each
 2. **Places:** "where do you train?" Default to one Place, `home`. List the main one first: it's the default. Then the Equipment tags at each Place. A gym is a Place, not a tag, so ask what it has item by item (`barbell`, `bench`, `cable`, `pull-up-bar`, `machines`, `dumbbells`, …). With `bands`, ask whether they have a door anchor or post to pull against (`band-anchor`).
 3. **Experience,** then **availability:** `days_per_week`, then fixed days, each with its ` @<place>` if it isn't at the default Place (`Wed: strength @gym`).
 4. **Easy run pace,** then **threshold run pace** (if run is Primary: the pace they could race for about an hour, or their 10 km race pace; if they don't know, leave it out, note it, and make the first run Quality slot the run test), then **pairings** and **Alternatives.**
-5. **FTP, LTHR and max HR,** if ride is tiered. If they have an intervals.icu account, open `https://intervals.icu/settings`: FTP is under Ride → Power level settings, LTHR and max HR under Ride → HR Zone settings. They read the values there, or enter them there if they're new. With no account yet, ask for the numbers now and enter them in intervals.icu in step 5. Leave out any value they don't know, and note it in the profile's Notes.
+5. **FTP, LTHR and max HR,** if ride is tiered. If they have an intervals.icu account, give them `https://intervals.icu/settings`: FTP is under Ride → Power level settings, LTHR and max HR under Ride → HR Zone settings. They read the values there, or enter them there if they're new. With no account yet, ask for the numbers now and enter them in intervals.icu in step 5. Leave out any value they don't know, and note it in the profile's Notes.
 
 **Done when** every field whose condition holds has a value or a note saying it's unknown.
 
@@ -68,26 +68,19 @@ Ask in the order of the Fields table in `docs/athlete-profile.md`, and skip each
 
 ## 5. intervals.icu
 
-First run `./scripts/icu.py whoami`. If it prints "authenticated as", skip the account, athlete ID and API key below.
+First run `python3 scripts/icu.py whoami`. If it prints "authenticated as", skip the account, athlete ID and API key below.
 
-1. **Account:** if they have none, open `https://intervals.icu` to sign up. Then enter any FTP, LTHR and max HR from step 2 at `https://intervals.icu/settings`.
-2. **MyWhoosh,** only if a Place has `smart-trainer` and `setup.sync_verified` isn't `yes`: open `https://www.mywhoosh.com`. They sign in, open the account's connection settings (look for Connections or Integrations), choose intervals.icu and approve access with the same account. Planned rides sync to MyWhoosh 7 days ahead, and finished rides come back.
-3. **Strava,** unless `setup.strava_connected` is `yes`: open `https://intervals.icu/settings`, and they check the 3rd party connections section. Tell them not to disconnect it: that can remove imported history. Record the answer in `setup.strava_connected`.
-4. **Athlete ID:** on the same settings page, under Developer Settings at the bottom (it looks like `i12345`). The ID isn't secret, so they can type it in the chat. Set these two lines in `.env`, keeping any others:
+1. **Account:** if they have none, give them `https://intervals.icu` to sign up. Then enter any FTP, LTHR and max HR from step 2 at `https://intervals.icu/settings`.
+2. **MyWhoosh,** only if a Place has `smart-trainer` and `setup.sync_verified` isn't `yes`: give them `https://www.mywhoosh.com`. They sign in, open the account's connection settings (look for Connections or Integrations), choose intervals.icu and approve access with the same account. Planned rides sync to MyWhoosh 7 days ahead, and finished rides come back.
+3. **Strava,** unless `setup.strava_connected` is `yes`: give them `https://intervals.icu/settings`, and they check the 3rd party connections section. Tell them not to disconnect it: that can remove imported history. Record the answer in `setup.strava_connected`.
+4. **Athlete ID:** on the same settings page, under Developer Settings at the bottom (it looks like `i12345`). The ID isn't secret, so they can type it in the chat. Set this line in `.env`, keeping any others, and remove an old `INTERVALS_KEYCHAIN_SERVICE` line if there is one:
 
    ```
    INTERVALS_ATHLETE_ID=<id>
-   INTERVALS_KEYCHAIN_SERVICE=local.slow-burn.intervals-icu
    ```
 
-5. **API key:** in Developer Settings they create a key if there's none, and copy it. Give them this command to type into the prompt, exactly as is, and tell them to paste the key only at the password prompt it shows:
-
-   ```
-   ! security add-generic-password -U -a "$USER" -s local.slow-burn.intervals-icu -w
-   ```
-
-   If no prompt appears, or the command hangs or fails, they press Escape and run the same command without the `! ` in a separate Terminal window. Confirm the key is stored with `security find-generic-password -a "$USER" -s local.slow-burn.intervals-icu >/dev/null && echo stored`. Leave out `-w`, which would print the key.
-6. **Check:** run `./scripts/icu.py whoami`. If the IDs disagree, fix `.env` from what it says.
+5. **API key:** in Developer Settings they create a key if there's none, and copy it. Create an empty `.intervals-key` at the repo root if it isn't there, and give them its full path. They open that file in any text editor (TextEdit, Notepad, VS Code), paste the key as its only line, and save. Tell them not to paste it into the chat.
+6. **Check:** run `python3 scripts/icu.py whoami`. If it says there's no API key, `.intervals-key` is empty or wasn't saved. If intervals.icu rejected the key, they copy it again from Developer Settings and save the file again. If the IDs disagree, fix `.env` from what it says.
 
 **Done when** `whoami` prints "authenticated as" with no mismatch, and `setup.strava_connected` is recorded.
 
@@ -95,8 +88,8 @@ First run `./scripts/icu.py whoami`. If it prints "authenticated as", skip the a
 
 Skip this if `setup.sync_verified` is `yes` and the user didn't ask for it.
 
-1. Open `https://intervals.icu/calendar`. They click Options → Export Calendar and copy the feed link. It works without a login, so it goes straight into their calendar app, not into the chat.
-2. They subscribe to it in their calendar app (look for "subscribe", "add calendar from URL" or "from internet"), name it Training, and pick the shortest refresh interval offered. In Apple Calendar, for example: File → New Calendar Subscription…, paste, Subscribe.
+1. Give them `https://intervals.icu/calendar`. They click Options → Export Calendar and copy the feed link. It works without a login, so it goes straight into their calendar app, not into the chat.
+2. They subscribe to it in their calendar app (look for "subscribe", "add calendar from URL" or "from internet"), name it Training, and pick the shortest refresh interval offered. In Apple Calendar, for example: File → New Calendar Subscription…, paste, Subscribe. In Google Calendar: Other calendars → + → From URL.
 
 **Done when** the user says the Training calendar is subscribed.
 
@@ -104,9 +97,9 @@ Skip this if `setup.sync_verified` is `yes` and the user didn't ask for it.
 
 Skip this if `setup.sync_verified` is `yes` and the user didn't ask for it.
 
-1. Run `./scripts/icu.py test-ride <tomorrow>`. It prints the event ID.
+1. Run `python3 scripts/icu.py test-ride <tomorrow>`. It prints the event ID.
 2. Ask them to check that "Setup test (delete me)" is on tomorrow in their calendar, after a refresh, and in the MyWhoosh calendar if they have a smart trainer. It can take a few minutes.
-3. Run `./scripts/icu.py delete-event <id>`.
+3. Run `python3 scripts/icu.py delete-event <id>`.
 4. Set `setup.sync_verified` to `yes` if it arrived everywhere it should, otherwise `no`, and note in the profile's Notes where it was missing. Commit `athlete/profile.md` as "Setup: intervals.icu".
 
 **Done when** the test event is deleted, `setup.sync_verified` is recorded and committed. Finish by telling the user that `/checkin` plans their first week.
