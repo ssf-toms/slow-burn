@@ -5,6 +5,7 @@ kind: strength
 sport: strength
 duration_min: 33
 variant_group: strength
+equipment: [kettlebell, bands, bodyweight]
 delivery: note
 ---
 

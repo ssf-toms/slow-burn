@@ -4,6 +4,7 @@ name: PT routine
 kind: pt
 sport: pt
 duration_min: 30
+equipment: []
 delivery: note
 ---
 

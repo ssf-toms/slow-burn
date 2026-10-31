@@ -5,7 +5,8 @@ kind: endurance
 sport: ride
 duration_min: 60
 variant_group: endurance-ride
-run_alternative: run-easy-strides
+alternative: run-easy-strides
+equipment: [smart-trainer]
 delivery: workout
 ---
 
@@ -29,4 +30,4 @@ Cooldown
 
 Zone 2 with six 30-second pick-ups to keep the legs snappy. They're brisk, not sprints, and add almost no fatigue.
 
-On a good-weather day, swap this for [run-easy-strides](../endurance/run-easy-strides.md).
+Alternative: swap this for [run-easy-strides](../endurance/run-easy-strides.md) on the day.

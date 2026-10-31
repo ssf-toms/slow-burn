@@ -5,6 +5,7 @@ kind: endurance
 sport: run
 duration_min: 48
 variant_group: endurance-run
+equipment: []
 delivery: note
 ---
 

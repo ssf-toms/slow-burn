@@ -34,8 +34,10 @@ class PlanError(Exception):
 
 # ── config and HTTP ──────────────────────────────────────────────────────
 def load_env():
-    env = {}
-    for line in (ROOT / ".env").read_text().splitlines():
+    env, path = {}, ROOT / ".env"
+    if not path.exists():  # dry runs and tests need no credentials
+        return env
+    for line in path.read_text().splitlines():
         if "=" in line and not line.lstrip().startswith("#"):
             k, v = line.split("=", 1)
             env[k.strip()] = v.strip().strip("'\"")
@@ -43,7 +45,7 @@ def load_env():
 
 
 ENV = load_env()
-ATHLETE = ENV["INTERVALS_ATHLETE_ID"]
+ATHLETE = ENV.get("INTERVALS_ATHLETE_ID")
 
 
 def api_key():
@@ -98,7 +100,7 @@ def load_bank():
         block = re.search(r"```intervals\n(.*?)\n```", body, re.S)
         prose = re.sub(r"```intervals\n.*?\n```", "", body, flags=re.S)
         prose = re.sub(r"^# .*\n", "", prose.strip())
-        prose = re.sub(r"\n?On a good-weather day, swap this for .*", "", prose).strip()
+        prose = re.sub(r"\n?Alternative: swap this for .*", "", prose).strip()
         bank[fm["id"]] = {**fm, "workout_text": block.group(1) if block else None, "prose": prose}
     return bank
 
@@ -173,9 +175,9 @@ def build_events(fm, days, bank):
         if rides:
             r = rides[0]
             desc = r["prose"]
-            if r.get("run_alternative") in bank:
-                alt = bank[r["run_alternative"]]
-                desc += f"\n\nGood weather? Run instead: {alt['name']}. {alt['prose']}"
+            if r.get("alternative") in bank:
+                alt = bank[r["alternative"]]
+                desc += f"\n\nAlternative: {alt['name']}. {alt['prose']}"
             desc += "\n\n" + r["workout_text"]
             events.append(dict(category="WORKOUT", type="Ride", indoor=True, name=r["name"],
                                description=desc, start_date_local=when,

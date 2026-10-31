@@ -5,6 +5,7 @@ kind: add-on
 sport: strength
 duration_min: 12
 variant_group: add-on
+equipment: [kettlebell, bands, bodyweight]
 delivery: note
 ---
 
