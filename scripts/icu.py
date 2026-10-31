@@ -35,6 +35,8 @@ DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 SESSION_KINDS = {"Recovery", "Quality", "Endurance", "Test", "Strength", "Other"}
 OTHER = "other:"                # Workout cell prefix for the profile's `other` activities
 SMART_TRAINER = "smart-trainer"  # equipment tag
+EXTENSION_MIN = (10, 15)         # allowed Extension minutes, Push Quality rides only
+EXTENSION_PCT = 68               # Endurance (Zone 2) %FTP for Extension minutes
 
 
 class PlanError(Exception):
@@ -207,9 +209,16 @@ def parse_week(path):
         date = start + dt.timedelta(days=DAYS.index(day))
         if date_s and date_s != date.strftime("%m-%d"):
             raise PlanError(f"{day}: Date {date_s} should be {date:%m-%d}")
-        days.append(dict(day=day, date=date, session=session,
-                         workouts=[w.strip() for w in workouts.split(",") if w.strip()],
-                         addon=addon or None))
+        ids, extend = [], None
+        for token in (w.strip() for w in workouts.split(",") if w.strip()):
+            m = re.fullmatch(r"(\S+?)\s*\+(\d+)", token)
+            if m:
+                if extend is not None:
+                    raise PlanError(f"{day}: more than one Extension")
+                token, extend = m.group(1), (m.group(1), int(m.group(2)))
+            ids.append(token)
+        days.append(dict(day=day, date=date, session=session, workouts=ids,
+                         addon=addon or None, extend=extend))
     if [d["day"] for d in days] != DAYS:
         raise PlanError("Plan must list Mon..Sun once each, in order")
     return fm, days
@@ -295,7 +304,30 @@ def plan_problems(d, bank, level, profile):
         problems.append(pairing)
     if sum(w["delivery"] == "workout" for w in workouts) > 1:
         problems.append("more than one ride Workout")
+    if d.get("extend"):
+        problems += extension_problems(d, bank, level)
     return problems
+
+
+def extension_problems(d, bank, level):
+    wid, minutes = d["extend"]
+    lo, hi = EXTENSION_MIN
+    problems = []
+    if level != "push":
+        problems.append(f"{wid} +{minutes}: Extensions are for Push weeks only")
+    if d["session"] != "Quality" or bank[wid]["delivery"] != "workout":
+        problems.append(f"{wid} +{minutes}: only a Quality ride can have an Extension")
+    if not lo <= minutes <= hi:
+        problems.append(f"{wid} +{minutes}: an Extension is {lo}–{hi} min")
+    return problems
+
+
+def extended(workout_text, minutes):
+    """Insert `minutes` at Endurance before the Cooldown section."""
+    block = f"Extension\n- {minutes}m {EXTENSION_PCT}%\n\n"
+    if "\nCooldown" not in workout_text:
+        return workout_text.rstrip() + "\n\n" + block.rstrip()
+    return workout_text.replace("\nCooldown", "\n" + block + "Cooldown", 1)
 
 
 def build_events(fm, days, bank, profile):
@@ -321,6 +353,8 @@ def build_events(fm, days, bank, profile):
                 and all(t in equipment for t in needed_equipment(alt)))
 
     events, problems = [], []
+    if sum(1 for d in days if d.get("extend")) > 1:
+        problems.append("at most one Extension a week")
     for d in days:
         if not d["session"] and not d["workouts"] and not d["addon"]:
             continue  # unplanned day in a partial week
@@ -334,12 +368,18 @@ def build_events(fm, days, bank, profile):
             events.append(note_event(*combined(notes), d["date"], ext(week, f"{d['day']}-note")))
         if rides:
             ride = rides[0]
+            name, text = ride["name"], ride["workout_text"]
             desc = description(ride)
+            if d.get("extend") and d["extend"][0] == ride["id"]:
+                minutes = d["extend"][1]
+                name += f" +{minutes}′"
+                text = extended(text, minutes)
+                desc += f"\n\nToday: +{minutes} min at Endurance ({EXTENSION_PCT}%) before the cooldown."
             alt = bank.get(ride.get("alternative"))
             if offered(alt):
                 desc += f"\n\nAlternative: {alt['name']}. {description(alt)}"
-            desc += "\n\n" + ride["workout_text"]
-            events.append(dict(category="WORKOUT", type="Ride", indoor=indoor, name=ride["name"],
+            desc += "\n\n" + text
+            events.append(dict(category="WORKOUT", type="Ride", indoor=indoor, name=name,
                                description=desc, start_date_local=f"{d['date']}T00:00:00",
                                external_id=ext(week, d["day"])))
         elif workouts:

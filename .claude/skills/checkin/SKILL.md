@@ -65,6 +65,7 @@ The client is `scripts/icu.py`. Run it from the repo root.
 - **Pairings:** a row combines Workouts only if the pair is in `pairings`, and nothing is paired with a Quality Session;
 - **Ladders** (if any Primary sport has Ladders): steps match the Next block, and each Quality slot is on the Ladder the pairing rule gives it;
 - no Endurance Workout appears twice in the week;
+- ride lengths are within the Level's range, and an Extension, if any, is on one Quality ride in a Push week (picking rule 4);
 - Strength and the Add-on are next in their cycles (if strength is tiered);
 - the FTP test is placed if it's due (if ride is Primary).
 

@@ -53,13 +53,13 @@ Run Workouts write their pace as `{easy_run_pace}`, which is filled from the Ath
 | [end-ride-60-rolling](endurance/end-ride-60-rolling.md) | 60 | run-easy-8-10 | any |
 | [end-ride-60-steps](endurance/end-ride-60-steps.md) | 60 | run-easy-8-10 | any |
 | [end-ride-60-openers](endurance/end-ride-60-openers.md) | 60 | run-easy-strides | any |
-| [end-ride-75](endurance/end-ride-75.md) | 75 | run-easy-10-12 | Push |
+| [end-ride-75](endurance/end-ride-75.md) | 75 | run-easy-10-12 | Normal, Push |
 | [end-ride-75-progressive](endurance/end-ride-75-progressive.md) | 75 | run-easy-10-12 | Push |
 
 Runs (easy pace, `{easy_run_pace}` from the Athlete Profile):
 - [run-easy-6-8](endurance/run-easy-6-8.md), ~45′
 - [run-easy-8-10](endurance/run-easy-8-10.md), ~55′
-- [run-easy-10-12](endurance/run-easy-10-12.md), ~68′, Push weeks only
+- [run-easy-10-12](endurance/run-easy-10-12.md), ~68′, Normal and Push weeks only
 - [run-easy-strides](endurance/run-easy-strides.md), ~48′
 
 ### Strength, PT, recovery, test
@@ -90,10 +90,12 @@ Runs (easy pace, `{easy_run_pace}` from the Athlete Profile):
    - After an FTP retest: drop one step on every Ladder, because the targets just got harder.
    - Top step completed at 7/10 or below: hold there and bring the next FTP test forward.
 3. **Starting steps:** set by `experience`, on every Ladder of each Primary sport that has Ladders: `new` starts at step 1, `some` at step 2 (ss-2, th-2, vo2-2), and `experienced` at step 3. If the starting step feels too hard, drop a step using rule 2.
-4. **Dose by Level:** the Level picks each Workout's Dose. Endurance ride length is the first case of Dose:
-   - Light: 50′ rides.
-   - Normal: 60′.
-   - Push: 60′, plus one 75′ ride (the template's long day, Saturday for the maintainer).
+4. **Dose by Level:** the Level picks each Workout's Dose. Endurance ride length is the first case of Dose. Each Level sets a range, not a fixed length, so vary the lengths within it, week to week and by how the athlete feels:
+   - Light: 50–60′ rides.
+   - Normal: 60–75′, with at most one 75′ ride (`end-ride-75`, on the template's long day, Saturday for the maintainer).
+   - Push: 60–75′, with at least one 75′ ride on the long day. Either 75′ ride may be used, and both in one week.
+
+   **Extension:** in a Push week, at most one Quality ride may get 10–15′ extra at Endurance (68%) before its cooldown, written `+<minutes>` after its ID in the Plan table (`th-2 +15`). Use it now and then, when the athlete is fresh, never in a Light or Normal week, and never on the FTP test. Quality Workouts otherwise keep the length their Ladder step gives them.
 
    If `alternatives: on`, every Endurance Session names an Alternative of similar effort in another tiered sport, which you can swap in on the day.
 5. **Endurance variety:** never the same Workout twice in one week. Prefer a different Workout from the one on the same day last week.

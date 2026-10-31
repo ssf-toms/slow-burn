@@ -42,7 +42,7 @@ How the rules in `docs/planning-rules.md` were applied:
 - **Quality:** ride is the only Primary sport with Ladders, so it gets both slots (Tuesday and Thursday, never consecutive). Light keeps one.
 - **Tiers:** ride and run, both Primary, have at least 2 days at every Level (in Normal, ride gets its 2 from the Quality slots). Swim, Secondary, has 1. Strength, Occasional, is one Add-on in Normal and Push.
 - **Light:** four days can't hold two Primaries at 2 days each plus a swim, so swim is the named Alternative on Friday instead.
-- **Dose:** Saturday's Push ride is the long one (75′).
+- **Dose:** Saturday is the long day: a 75′ ride in Push, and in Normal the one ride that may go to 75′.
 
 ## Notes
 

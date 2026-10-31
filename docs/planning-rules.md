@@ -13,7 +13,7 @@ Apply these rules in order:
 3. **Tier counts:** each Primary activity is on at least 2 training days a week, each Secondary on 1–2, and each Occasional on at most 1, or only as an Alternative. A Strength Add-on counts as a strength day. For the Recovery activities (PT and walk), a Primary or Secondary Tier is met on Recovery Days as well as training days: PT on a Recovery Day counts toward its 2 or 1–2 days. If the training days can't hold every Primary at 2 and every Secondary at 1 (as in a short Light week), the Primaries keep their days and a Secondary that doesn't fit becomes a named Alternative. Judgement fills the remaining days, and the athlete approves the result.
 4. **Spacing:** Quality Sessions are never on consecutive days. Strength has no spacing rules of its own.
 5. **Fixed days:** the days in `availability.fixed` are placed first, before any other rule fills the week.
-6. **Dose:** the template sets the Session kind, and the Level sets each Workout's Dose. The Endurance ride length (50′ in Light, 60′ in Normal, 60′ plus one 75′ in Push) is the first case of this.
+6. **Dose:** the template sets the Session kind, and the Level sets each Workout's Dose. The Endurance ride length is the first case of this: a range for each Level (50–60′ in Light, 60–75′ in Normal with at most one 75′ ride, 60–75′ in Push with at least one), plus an optional Extension of one Push Quality ride (picking rule 4 in `bank/README.md`).
 7. **Conditional parts:**
    - The FTP test is planned only if ride is Primary.
    - Load Warning rules 3 and 4 apply only if ride is Primary or Secondary (not Occasional). Otherwise use rules 1 and 2 plus judgement.
@@ -46,7 +46,7 @@ How the rules were applied:
 - **Training days:** 4 (Light), 5 (Normal) and 6 (Push), so Push keeps Sunday as a Recovery Day. Compared with the old tables, Monday's new training day costs one Endurance Session at each Level (Light's Tuesday and Friday, Normal's Sunday, Push's Sunday).
 - **Quality:** ride is the only Primary sport with Ladders, so it gets both slots, Tuesday and Thursday as before. Light keeps one, on Tuesday (an easy Sweet Spot, see rule 1 in `bank/README.md`).
 - **Tiers:** ride is on at least 2 days at every Level. PT is on Monday and at least one Recovery Day. Strength is Monday plus Wednesday's Add-on. Run is an Alternative only, and the walk is on at most one day.
-- **Dose:** Light rides are 50′, Normal 60′, and Push's Saturday ride is the long one (75′).
+- **Dose:** Light rides are 50–60′, Normal 60–75′ with Saturday as its one 75′ ride, and Push 60–75′ with at least Saturday at 75′.
 
 ## Load Warnings
 

@@ -61,7 +61,7 @@ Why this Level, what life looks like this week, any Load Warning and how it was 
 
 **Plan table.** The client script parses this table, so keep the columns in this order.
 - `Session`: `Recovery` | `Quality` | `Endurance` | `Strength` | `Other` | `Test`. `Strength` and `Other` come from the Week Template's cells of those kinds (`docs/athlete-profile.md`).
-- `Workout`: one or more Bank IDs separated by commas, in the order done (`pt, str-a`). Leave it empty on a `Recovery` row for a full rest day, such as illness. In a partial week (a Week Record started mid-week), leave both `Session` and `Workout` empty on the unplanned days.
+- `Workout`: one or more Bank IDs separated by commas, in the order done (`pt, str-a`). In a Push week, one Quality ride may carry an Extension, `+<minutes>` after its ID (`th-2 +15`): 10–15 extra minutes at Endurance before the cooldown (picking rule 4 in `bank/README.md`). Leave it empty on a `Recovery` row for a full rest day, such as illness. In a partial week (a Week Record started mid-week), leave both `Session` and `Workout` empty on the unplanned days.
 - `Add-on`: one Add-on ID or empty. Only allowed on Endurance and Test rows.
 - `Done`, filled at the Review:
   - `✓` done

@@ -36,6 +36,10 @@ _Avoid_: Session (when meaning the definition), template, routine
 How much of a Workout is done at a given Week Level: rounds or exercises for strength and PT, minutes for an Endurance ride. The Workout states its Dose for each Level.
 _Avoid_: Volume, size, amount
 
+**Extension**:
+10–15 extra minutes at Endurance added before the cooldown of one Quality ride in a Push week, now and then. It's written `+<minutes>` after the Workout's ID in the Week Plan (`th-2 +15`). It's part of the Dose, so the Workout itself doesn't change.
+_Avoid_: Bonus, extra volume
+
 **Workout Bank**:
 The small curated set of Workouts that every Week Plan draws from.
 _Avoid_: Library, catalogue, database

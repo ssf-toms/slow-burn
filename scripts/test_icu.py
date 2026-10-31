@@ -293,6 +293,51 @@ class PushedEvents(unittest.TestCase):
         self.assertIn("Alternative: Easy run 8–10 km", e["description"])
 
 
+class Extensions(unittest.TestCase):
+    def setUp(self):
+        athlete_dir(self, INDOOR_PROFILE)
+
+    def build(self, rows, level="push"):
+        return build(week(self, rows, level))
+
+    def test_push_quality_ride_gets_endurance_minutes_before_the_cooldown(self):
+        events, problems = self.build({"Tue": ("Quality", "th-2 +15")})
+        self.assertEqual(problems, [])
+        e = event(events, "Tue")
+        self.assertEqual(e["name"], "Threshold 2: 3×8 min @ 97% +15′")
+        self.assertIn("Extension\n- 15m 68%\n\nCooldown\n- 6m 50%", e["description"])
+        self.assertIn("Today: +15 min at Endurance (68%) before the cooldown.", e["description"])
+
+    def test_extensions_are_for_push_weeks_only(self):
+        problems = self.build({"Tue": ("Quality", "th-2 +15")}, "normal")[1]
+        self.assertIn("Tue: th-2 +15: Extensions are for Push weeks only", problems)
+
+    def test_only_quality_rides_can_be_extended(self):
+        problems = self.build({"Wed": ("Endurance", "end-ride-60 +10")})[1]
+        self.assertIn("Wed: end-ride-60 +10: only a Quality ride can have an Extension", problems)
+
+    def test_extension_length_is_bounded(self):
+        problems = self.build({"Tue": ("Quality", "th-2 +30")})[1]
+        self.assertIn("Tue: th-2 +30: an Extension is 10–15 min", problems)
+
+    def test_at_most_one_extension_a_week(self):
+        problems = self.build({"Tue": ("Quality", "th-2 +10"), "Thu": ("Quality", "ss-2 +10")})[1]
+        self.assertIn("at most one Extension a week", problems)
+
+
+class DoseByLevel(unittest.TestCase):
+    def setUp(self):
+        athlete_dir(self, INDOOR_PROFILE)
+
+    def test_normal_week_can_have_a_75_minute_ride(self):
+        problems = build(week(self, {"Sat": ("Endurance", "end-ride-75")}, "normal"))[1]
+        self.assertEqual(problems, [])
+
+    def test_progressive_75_stays_push_only(self):
+        problems = build(week(self, {"Sat": ("Endurance", "end-ride-75-progressive")}, "normal"))[1]
+        self.assertIn("Sat: end-ride-75-progressive is for push weeks only", problems)
+
+
 class SetupCommands(unittest.TestCase):
     def run_cmd(self, argv, reply=None):
         out = io.StringIO()
