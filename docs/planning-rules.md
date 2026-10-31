@@ -72,5 +72,5 @@ When a Week Plan changes mid-week:
 - **Endurance Sessions** swap freely: to their Alternative (if `alternatives: on`), or between days.
 - **Recovery Days** stay in the week. They are PT, a walk, rest, or a recovery-type `other` activity. When a day is lost, an Endurance Session gives way first.
 - **One Session a day** still holds.
-- **No Workout to fill a Session:** if a moved or swapped Session has no Workout the profile can fill (missing Equipment, or a gap in the Bank such as no swim Workouts), flag it to the user. Never invent a Workout.
+- **No Workout to fill a Session:** if a moved or swapped Session has no Workout the profile can fill (missing Equipment, or a gap in the Bank such as no outdoor FTP test), flag it to the user. Never invent a Workout.
 - **Illness:** each sick day becomes a Recovery row with an empty Workout (rest). The first day back is Endurance or a walk, never Quality. If symptoms are above the neck only (a cold) and mild, a walk is fine.

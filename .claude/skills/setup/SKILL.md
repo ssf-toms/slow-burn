@@ -45,7 +45,7 @@ Ask in the order of the Fields table in `docs/athlete-profile.md`, and skip each
 
 1. Run `grep -H '^sport:\|^kind:\|^ladder:\|^equipment:\|^delivery:' bank/*/*.md`.
 2. For each tiered activity, list what the Bank can't serve:
-   - a tiered activity with no Workout of that `sport` (today, swim);
+   - a tiered activity with no Workout of that `sport`;
    - a Primary ride, run or swim with no Ladders, which gets no Quality slot (today, swim);
    - Workouts whose `equipment` has a tag the profile lacks. `smart-trainer` on a `delivery: workout` ride doesn't count: the ride is pushed as outdoor instead. On a `delivery: note` Workout it does count (the FTP test, if ride is Primary);
    - Add-ons only if ride, run or swim is tiered, because an Add-on follows an Endurance Session.

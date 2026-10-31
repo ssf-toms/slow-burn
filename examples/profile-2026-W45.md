@@ -24,4 +24,4 @@ An invented example: a Light week planned from `examples/profile.md`, the outdoo
 
 ## Reasoning
 
-The Light template from the profile. Monday is the fixed rest day. Light's one Quality slot goes to ride this time (it alternates with run, Light week to Light week): Sweet Spot a step below the starting step (ss-1, picking rule 1), so Wednesday is a run. Runs are 35–45′ in a Light week (picking rule 4), each with its ride Alternative. Rides go out as outdoor rides (no smart trainer). Friday's template names swim as the Alternative, but the Bank has no swim Workouts yet, so the ride's own run Alternative is offered.
+The Light template from the profile. Monday is the fixed rest day. Light's one Quality slot goes to ride this time (it alternates with run, Light week to Light week): Sweet Spot a step below the starting step (ss-1, picking rule 1), so Wednesday is a run. Runs are 35–45′ in a Light week (picking rule 4), each with its ride Alternative. Rides go out as outdoor rides (no smart trainer). Friday's template names swim as the Alternative, so it's a 50′ ride, whose first Alternative is a swim (`swim-easy-1500`, picking rule 4).
