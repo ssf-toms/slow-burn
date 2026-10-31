@@ -12,6 +12,7 @@ availability:
   fixed:
     Mon: rest
 easy_run_pace: "5:20–5:40/km"
+threshold_run_pace: "4:50/km"
 alternatives: on
 ftp: 230
 lthr: 168

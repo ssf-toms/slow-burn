@@ -2,6 +2,7 @@
 import contextlib
 import io
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -240,6 +241,11 @@ class ProfileChecks(unittest.TestCase):
         self.assertIn("Wed: run-easy-6-8 needs easy_run_pace in the profile", problems)
 
 
+    def test_run_quality_needs_a_threshold_pace_in_the_profile(self):
+        no_threshold = re.sub(r"threshold_run_pace: .*\n", "", example_profile())
+        problems = self.problems(no_threshold, {"Tue": ("Quality", "run-tempo-1")})
+        self.assertIn("Tue: run-tempo-1 needs threshold_run_pace in the profile", problems)
+
 class PushedEvents(unittest.TestCase):
     def events(self, profile, rows, level="normal", bank=None):
         athlete_dir(self, profile)
@@ -255,6 +261,12 @@ class PushedEvents(unittest.TestCase):
     def test_run_pace_comes_from_the_profile(self):
         e = event(self.events(example_profile(), {"Wed": ("Endurance", "run-easy-6-8")}), "Wed")
         self.assertIn("Easy pace (5:20–5:40/km)", e["description"])
+
+    def test_run_quality_note_gets_threshold_pace_from_the_profile(self):
+        e = event(self.events(example_profile(), {"Tue": ("Quality", "run-th-2")}), "Tue")
+        self.assertEqual(e["category"], "NOTE")
+        self.assertIn("4:50/km", e["description"])
+        self.assertNotIn("{threshold_run_pace}", e["description"])
 
     def test_dose_for_the_week_level_is_appended(self):
         bank = icu.load_bank()
