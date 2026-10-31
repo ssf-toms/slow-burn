@@ -51,4 +51,4 @@ How the rules in `docs/planning-rules.md` were applied:
   - **No swim Workouts** in the Bank yet, so swim Sessions and the swim Alternative can't be filled.
   - **No run Ladders,** so run is Primary but gets no Quality slot.
   - **The FTP test** (`ftp-ramp-test`) is a MyWhoosh Ramp Test, which needs a smart trainer. Ride is Primary, so a test is due, but there's no outdoor test.
-  - **Two of the three Strength Add-ons** (`addon-upper`, `addon-posterior`) need a kettlebell, which isn't in `equipment` (the gym has none). Only `addon-core` (bands, bodyweight) can be planned, so every Add-on is `addon-core` until the Bank has more.
+  - **Strength Add-ons** are composed from the bodyweight and band Exercises (no `band-anchor`, so no Pallof press or band row). The `gym` tag itself unlocks no Exercises: list the gym's kit (`barbell`, `dumbbells`, `cable`, …) to use it.

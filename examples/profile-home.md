@@ -43,5 +43,4 @@ How the rules in `docs/planning-rules.md` were applied:
 ## Notes
 
 - PT and walks count as Recovery Days. The training days here are strength and Pilates.
-- Gaps found at Setup (for the Bank, item 3):
-  - **No dumbbell or bodyweight Strength Workouts.** `str-a`, `str-b` and `str-c` all use a kettlebell, so Strength Sessions can't be filled yet.
+- No Bank gaps: Strength Sessions are composed from the bodyweight and dumbbell Exercises, which cover every pattern.
