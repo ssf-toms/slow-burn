@@ -73,7 +73,7 @@ Runs (easy pace, `{easy_run_pace}` from the Athlete Profile):
   - [addon-upper](add-ons/addon-upper.md)
   - [addon-posterior](add-ons/addon-posterior.md)
 - **PT:** [pt](pt/pt.md), ~30′; contents are your own routine.
-- **Recovery:** [rec-walk](recovery/rec-walk.md), a 30–60′ walk. Recovery Days are always off the bike, so there's no trainer setup.
+- **Recovery:** [rec-walk](recovery/rec-walk.md), a 30–60′ walk. A Recovery Day is PT, a walk, rest or a recovery-type `other` activity, never a ride (picking rule 8).
 - **FTP test:** [ftp-ramp-test](test/ftp-ramp-test.md), the MyWhoosh Ramp Test (a calendar note pointing to MyWhoosh, not a pushed workout), then [test-spin](test/test-spin.md), a 20′ easy spin.
 
 ## Picking rules (used by the Check-in)
