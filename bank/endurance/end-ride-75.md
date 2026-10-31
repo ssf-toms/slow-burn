@@ -6,7 +6,8 @@ sport: ride
 duration_min: 75
 variant_group: endurance-ride
 levels: [push]
-run_alternative: run-easy-10-12
+alternative: run-easy-10-12
+equipment: [smart-trainer]
 delivery: workout
 ---
 
@@ -26,4 +27,4 @@ Cooldown
 
 The longest ride in the Bank, for Push weeks only. Stand up for 30 seconds every 10–15 minutes for comfort.
 
-On a good-weather day, swap this for [run-easy-10-12](../endurance/run-easy-10-12.md).
+Alternative: swap this for [run-easy-10-12](../endurance/run-easy-10-12.md) on the day.

@@ -6,6 +6,7 @@ sport: ride
 duration_min: 66
 ladder: sweet-spot
 step: 3
+equipment: [smart-trainer]
 delivery: workout
 ---
 

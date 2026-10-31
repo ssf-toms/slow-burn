@@ -5,7 +5,8 @@ kind: endurance
 sport: ride
 duration_min: 60
 variant_group: endurance-ride
-run_alternative: run-easy-8-10
+alternative: run-easy-8-10
+equipment: [smart-trainer]
 delivery: workout
 ---
 
@@ -29,4 +30,4 @@ Cooldown
 
 A slow climb and descent through Zone 2. Easy throughout.
 
-On a good-weather day, swap this for [run-easy-8-10](../endurance/run-easy-8-10.md).
+Alternative: swap this for [run-easy-8-10](../endurance/run-easy-8-10.md) on the day.

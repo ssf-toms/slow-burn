@@ -5,7 +5,8 @@ kind: endurance
 sport: ride
 duration_min: 50
 variant_group: endurance-ride
-run_alternative: run-easy-6-8
+alternative: run-easy-6-8
+equipment: [smart-trainer]
 delivery: workout
 ---
 
@@ -25,4 +26,4 @@ Cooldown
 
 Easy, conversational, nose-breathing pace. The ride should feel almost too easy; that's the point.
 
-On a good-weather day, swap this for [run-easy-6-8](../endurance/run-easy-6-8.md).
+Alternative: swap this for [run-easy-6-8](../endurance/run-easy-6-8.md) on the day.

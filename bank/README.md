@@ -11,6 +11,25 @@ Ride targets are **%FTP** with simple steps and repeats, and no ramps or cadence
 | Threshold | 95–97% | 228–233 W |
 | VO2max | 110–112% | 264–269 W |
 
+## Frontmatter
+
+| Field | Value | Meaning |
+|-------|-------|---------|
+| `id` | lowercase, dashes | The name used in Week Records. Same as the file name. |
+| `name` | string | The calendar title. |
+| `kind` | `quality` \| `endurance` \| `strength` \| `add-on` \| `pt` \| `recovery` \| `test` | What the Workout is for. |
+| `sport` | `ride` \| `run` \| `walk` \| `strength` \| `pt` | The activity. |
+| `duration_min` | number | Typical length in minutes. |
+| `equipment` | list of tags, `[]` for none | The Equipment the Workout needs, from the tags in `docs/athlete-profile.md` (`bodyweight`, `bands`, `kettlebell`, `dumbbells`, `barbell`, `gym`, `smart-trainer`, `pool`, `hr-strap`). It can only be planned if the athlete has every tag. Required in every file. |
+| `delivery` | `workout` \| `note` | `workout` is pushed as a structured workout (rides). `note` is a calendar note. |
+| `ladder`, `step` | Ladder name, number | Quality Workouts only: which Ladder, and which step on it. |
+| `variant_group` | string | Workouts that rotate with each other (Endurance rides, runs, Strength, Add-ons). |
+| `levels` | list, e.g. `[push]` | Optional. The Week Levels it may be planned in. Left out means any. |
+| `alternative` | Workout `id` | Optional. The Alternative of similar effort, in another sport, offered next to this Endurance Workout. The body ends with a matching `Alternative: swap this for …` line, which is not pushed. |
+| `dose` | `{light: "...", normal: "...", push: "..."}` | Optional. The Workout's Dose at each Week Level, for example rounds for strength. Not set on any Workout yet. |
+
+Run Workouts write their pace as `{easy_run_pace}`, which is filled from the Athlete Profile when they're pushed.
+
 ## Index
 
 ### Quality: Ladders (bike only)
@@ -25,7 +44,7 @@ Ride targets are **%FTP** with simple steps and repeats, and no ramps or cadence
 
 ### Endurance
 
-| Ride | Min | Run alternative | Levels |
+| Ride | Min | Alternative | Levels |
 |------|-----|-----------------|--------|
 | [end-ride-50](endurance/end-ride-50.md) | 50 | run-easy-6-8 | any |
 | [end-ride-50-rolling](endurance/end-ride-50-rolling.md) | 50 | run-easy-6-8 | any |
@@ -37,7 +56,7 @@ Ride targets are **%FTP** with simple steps and repeats, and no ramps or cadence
 | [end-ride-75](endurance/end-ride-75.md) | 75 | run-easy-10-12 | Push |
 | [end-ride-75-progressive](endurance/end-ride-75-progressive.md) | 75 | run-easy-10-12 | Push |
 
-Runs (easy pace, 5:45–6:00/km in the run files; change it to your own):
+Runs (easy pace, `{easy_run_pace}` from the Athlete Profile):
 - [run-easy-6-8](endurance/run-easy-6-8.md), ~45′
 - [run-easy-8-10](endurance/run-easy-8-10.md), ~55′
 - [run-easy-10-12](endurance/run-easy-10-12.md), ~68′, Push weeks only
